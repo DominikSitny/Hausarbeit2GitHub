@@ -1,0 +1,130 @@
+\section{Die einzelnen Bereiche}
+
+In diesem Kapitel werden die einzelnen Bereiche des Dokuments beschrieben und Hinweise gegeben, wie diese zu schreiben sind.
+
+\subsection{Titelblatt}
+
+Das Titelblatt wurde für Belegarbeiten im Fachbereich Wirtschaft in den Studiengängen „Bachelor Wirtschaftsinformatik und Bachelor of Science (B.Sc.) Wirtschaftsinformatik“ gestaltet. Für andere wissenschaftliche Arbeiten muss es sinngemäß abgeändert werden oder die entsprechende Vorlage genutzt werden. Überschreiben Sie Titel, Studiengang, die Namen und Kalenderdaten mit den in Ihrem Fall gültigen Angaben.
+
+\subsection{Inhaltsverzeichnis}
+
+Die Gliederung soll zeigen, in welcher Weise die gestellte Aufgabe verstanden und bearbeitet wurde. Sie muss deshalb die Entwicklung des Themas und den Aufbau der Arbeit nachvollziehbar darstellen. Die einzelnen Gliederungspunkte müssen den Inhalt der entsprechenden Textteile knapp, aber zutreffend umreißen. Sie müssen im Textteil in vollem Wortlaut wiederholt werden. Im Inhaltsverzeichnis ist die Seite anzugeben, auf der im Textteil der entsprechende Gliederungspunkt beginnt.
+
+Bei der Gliederung ist darauf zu achten, dass auf jeder Gliederungsstufe mindestens zwei Gliederungspunkte aufgeführt werden, d.\,h. wenn Sie in Ihrer Arbeit den Gliederungspunkt „1.“ aufführen, muss in Ihrer Arbeit mindestens auch ein Gliederungspunkt „2.“ enthalten sein. Diese Regel gilt für jede Gliederungsstufe.
+
+In \LaTeX{} wird das Inhaltsverzeichnis automatisch anhand der Gliederungsbefehle wie \verb|\section|, \verb|\subsection|, \verb|\subsubsection| usw. erstellt. Um das Inhaltsverzeichnis anzuzeigen, fügen Sie an der gewünschten Stelle im Dokument den Befehl \verb|\tableofcontents| ein.
+
+Die Struktur und Darstellung des Inhaltsverzeichnisses kann bei Bedarf mit zusätzlichen Paketen wie \verb|tocloft| oder \verb|titletoc| angepasst werden. Eine Aktualisierung des Verzeichnisses erfolgt automatisch bei der Kompilierung. Falls es noch nicht korrekt angezeigt wird, kompilieren Sie das Dokument mehrmals, um alle Verweise zu aktualisieren.
+
+\subsection{Abbildungsverzeichnis und Tabellenverzeichnis}
+
+Nach dem Inhaltsverzeichnis können ein Abbildungsverzeichnis und/oder ein Tabellenverzeichnis eingefügt werden. Diese Verzeichnisse werden – ähnlich wie das Inhaltsverzeichnis – automatisch erstellt, sofern Abbildungen und Tabellen mit den Befehlen \verb|\caption{...}| innerhalb von \verb|figure|- bzw. \verb|table|-Umgebungen versehen wurden.
+
+Das Abbildungsverzeichnis wird mit dem Befehl \verb|\listoffigures| und das Tabellenverzeichnis mit \verb|\listoftables| an der gewünschten Stelle im Dokument eingefügt. Die Aktualisierung erfolgt automatisch beim Kompilieren des Dokuments.
+
+
+Ein Abbildungsverzeichnis ist zu erstellen, wenn es mehr als drei Abbildungen in der Arbeit gibt. Dasselbe gilt für ein Tabellenverzeichnis. Die Verzeichnisse umfassen alle Abbildungen und Tabellen der Arbeit mit Abbildungs- bzw. Tabellenbezeichnung und Seitenangabe. In Abstimmung mit dem Betreuer können Abbildungs- und Tabellenverzeichnis auch hinten in der Arbeit angeordnet werden.
+
+\subsection{Abkürzungsverzeichnis}
+
+Auf der nächsten Seite schließt sich ein Abkürzungsverzeichnis an. Ein Abkürzungsverzeichnis ist zu erstellen, wenn offizielle Abkürzungen verwendet werden, die nicht im Duden aufgeführt sind. Bei Arbeiten, die mathematische Formeln verwenden, ist ggf. ein Symbolverzeichnis anzulegen, wenn es die Lesbarkeit der Arbeit verbessert.
+
+Das Abkürzungsverzeichnis enthebt Sie nicht von der Aufgabe, eine Abkürzung bei deren erstmaliger Verwendung zu erklären.
+
+\textbf{Hinweis:} Im Zweifelsfall ist aus Gründen der Lesefreundlichkeit lieber eine Abkürzung zu viel aufzulisten als eine zu wenig.
+
+\subsection{Inhalt der Abschlussarbeit}
+
+Dies ist der wesentliche Teil Ihrer Arbeit.
+
+\subsubsection{Inhalt im Unterabschnitt 3.5.1}
+
+\textit{Anm.: Weitere Unterkapitel erforderlich, da auf jeder Gliederungsebene mindestens zwei Gliederungspunkte aufgeführt sein müssen.}
+
+\subsubsection{Automatische Verweise}
+
+In \LaTeX{} können nummerierte Elemente wie Kapitelüberschriften, Abbildungen oder Tabellen mit sogenannten Labels und Referenzen verlinkt werden. Dazu verwendet man den Befehl \verb|\label{...}| unmittelbar nach der Überschrift oder der \verb|\caption| einer Abbildung bzw. Tabelle.
+
+An anderer Stelle im Text kann mit \verb|\ref{...}| oder \verb|\autoref{...}| (z.B. mit dem \verb|hyperref|-Paket) ein Verweis auf dieses Element gesetzt werden. Die Nummerierung passt sich automatisch an, wenn die Struktur des Dokuments verändert wird.
+
+\textbf{Beispiel:}
+\begin{verbatim}
+\section{Einleitung}
+\label{sec:einleitung}
+
+Wie in Abschnitt~\ref{sec:einleitung} beschrieben, ...
+\end{verbatim}
+
+\textbf{Beispiel für Abbildungen:}
+\begin{verbatim}
+\begin{figure}[ht]
+  \centering
+  \includegraphics{bild.png}
+  \caption{Beispielabbildung}
+  \label{fig:beispiel}
+\end{figure}
+
+Siehe Abbildung~\ref{fig:beispiel}.
+\end{verbatim}
+
+\subsubsection{Weiterer Unterabschnitt auf der gleichen Ebene wie 3.5.2}
+
+\textit{Siehe Anmerkung zu 3.5.1}
+
+\subsection{Literaturverzeichnis}
+
+Es enthält ausschließlich die in der Arbeit verwendeten Quellen. Das Literaturverzeichnis hat, wie im Inhaltsverzeichnis zu sehen, keine eigene Gliederungsnummer.
+
+\subsection{Anhang}
+
+Anhänge enthalten Informationen zur Arbeit, die aber zu umfangreich sind, um in den Text aufgenommen zu werden. In den Anhang können Tabellen, Abbildungen, transkribierte Interviews, Fragebögen oder sonstige Materialien ausgelagert werden, wenn deren Berücksichtigung innerhalb des Textteiles dessen Lesbarkeit erschweren würde. In diesem Falle müssen im Text Verweise auf den Anhang erfolgen. Ebenso sind Materialien, die nicht mit eingebunden werden können, wie beispielsweise Datenträger oder Poster, in den Anhang aufzunehmen. Diese sind, insofern nicht elektronisch abgegeben wird, möglichst in einer Einbandtasche am hinteren Buchdeckel zu befestigen oder separat in einer Mappe oder Rolle zusammen mit der Arbeit abzugeben.
+
+Der Anhang hat keine Kapitelnummer. Die Seiten des Anhangs werden in dieser Vorlage römisch fortlaufend nummeriert.
+
+\textbf{Hinweis:} Sämtliche Abbildungen und Tabellen, die einen Kontext zur Arbeit aufweisen, sind unbedingt in den Textteil aufzunehmen. Der Anhang dient nur der weiteren Erläuterung. Bei umfangreichen Inhalten ist dem Anhang ggf. ein Anhangverzeichnis voranzustellen. Hierzu ist jedem Anhang eine Überschrift zu geben und eine Anhangnummerierung einzuführen.
+
+\subsection{Geschützte Leerzeichen}
+
+Ein geschütztes Leerzeichen sorgt dafür, dass zwei zusammengehörende Wörter oder Zeichenfolgen nicht durch einen Zeilenumbruch getrennt werden. Dies ist besonders wichtig bei Abkürzungen (z.\,B., d.\,h., u.\,a.) oder zwischen Zahlen und Maßeinheiten (z.\,B. 20\,kg, 15\,\%).
+
+In \LaTeX{} setzt man ein geschütztes Leerzeichen mit dem Befehl \verb|\,|. Dieser erzeugt ein kleines, nicht umbrechbares Leerzeichen.
+
+\textbf{Beispiel:}
+\begin{quote}
+\verb|z.\,B. 20\,kg| wird gesetzt als: z.\,B. 20\,kg
+\end{quote}
+
+\subsection{Erklärung}
+
+Mit der Erklärung wird versichert, dass die vorliegende Arbeit selbständig angefertigt wurde und nur die in der Arbeit ausdrücklich benannten Quellen und Hilfsmittel verwendet wurden. Die Erklärung muss auf den abzuliefernden Exemplaren wahrheitsgemäß von Hand unterschrieben und mit dem Datum versehen werden.
+
+\subsection{Sperrvermerk}
+
+Auf Wunsch kann die Arbeit durch einen entsprechenden Vermerk „gesperrt“ werden. In diesem Fall ist die Arbeit nur den prüfenden Personen zugänglich. Dieser Sperrvermerk ist dann sinnvoll, wenn die in einer empirischen Arbeit kooperierende Unternehmung vertrauliche Daten für die Themenbearbeitung zur Verfügung stellt und deren Verbreitung untersagen möchte. Der Sperrvermerk wird auf einer eigenen Seite zwischen dem Deckblatt und dem Inhaltsverzeichnis platziert. Er erhält keine Seitennummerierung und wird nicht in das Inhaltsverzeichnis aufgenommen.
+
+\textbf{Formulierungsvorschlag:}
+
+\begin{quote}
+Die vorliegende Bachelorarbeit enthält vertrauliche Daten der Fa. „XYZ“. Die Weitergabe des Inhaltes der Bachelorarbeit im Gesamten oder in Teilen ist grundsätzlich untersagt. Ausnahmen bedürfen der schriftlichen Genehmigung der Fa. „XYZ“.
+\end{quote}
+
+\subsection{Gendergerechte Sprache}
+
+Hier ist ein Hinweis am Beginn der wissenschaftlichen Arbeit möglich, der folgendermaßen formuliert sein kann: 
+\begin{quote}
+„Aus Gründen der Lesbarkeit wird auf die gleichzeitige Verwendung der Sprachformen männlich, weiblich und divers (m/w/d) verzichtet. Sämtliche Personenbezeichnungen gelten gleichermaßen für alle Geschlechter.“
+\end{quote}
+
+Dieser Hinweis kann, wie ein Sperrvermerk, auf einer eigenen Seite zwischen dem Deckblatt und dem Inhaltsverzeichnis eingefügt werden. Er erhält keine Seitenzahl und wird nicht im Inhaltsverzeichnis aufgeführt.
+
+Allerdings wird diese Formulierung nicht immer als ausreichend erachtet und kann in der Bewertung zu Abzügen führen. Es wird empfohlen, die gewählte Vorgehensweise zur geschlechtergerechten Sprache im Vorfeld mit der betreuenden Person abzustimmen und anschließend konsequent anzuwenden.
+
+Alternativ zum allgemeinen Hinweis können folgende Strategien verwendet werden:
+\begin{itemize}
+    \item geschlechtsneutrale Begriffe (z.\,B. die Interviewenden, Teilnehmende, Mitarbeitende)
+    \item Beschreibung von Funktionen, Tätigkeiten oder Gruppen (z.\,B. das Projektteam, die Teamleitung)
+    \item Genderstern (z.\,B. der*die Leser*in)
+    \item Gender-Gap (z.\,B. Wähler\_innen)
+\end{itemize}
+
+Hierbei ist es wichtig, den Lesefluss so wenig wie möglich zu beeinflussen und darauf zu achten, dass die Sätze grammatikalisch korrekt, syntaktisch stimmig und inhaltlich verständlich sind.

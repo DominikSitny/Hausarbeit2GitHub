@@ -1,0 +1,95 @@
+\documentclass[12pt, captions=tableabove]{scrartcl}
+
+\usepackage{fontspec} % Native Schriftwahl & UTF-8
+\setmainfont{Arial}[SmallCapsFont={Latin Modern Roman}]
+\setkomafont{disposition}{\normalfont\bfseries}
+
+\usepackage{geometry}
+\geometry{left=3cm,right=2cm,top=2cm,bottom=2cm, footskip=0.8cm, head=22pt}
+\setlength{\footheight}{22pt}
+
+\usepackage[none]{hyphenat} % Silbentrennung deaktivieren
+\sloppy % Erlaubt LaTeX, beim Blocksatz etwas großzügiger zu arbeiten
+
+\usepackage{microtype} % Aktiviert das Micro-Typography-Paket
+
+\renewcommand{\baselinestretch}{1.25} % Zeilenabstand einstellen %
+\usepackage[dvipsnames]{xcolor} % z. B. Schriftfarbe ändern
+
+\usepackage{tabularx} % Im Vergleich zur Standardtabellen gibt es mit tabularx die Möglichkeit der Tabelle eine bestimmte Breite vorzugeben.
+
+\usepackage[nopostdot]{glossaries} % Package für das Abkürzungsverzeichnis
+
+\usepackage[utf8]{inputenc} % Unterstützung von UTF-8 für ältere LaTeX Versionen und Overleaf
+
+\usepackage[english,main=ngerman]{babel} % Die zuletzte angeben Sprache ist die zu Beginn bereitgestellte Sprache. Sprache wechseln mit z. B. \selectlanguage{german}
+
+%------- Einstellung der Kopf- und Fußzeilen. Kompletten Block löschen, wenn nicht benötigt.
+\usepackage[automark,headsepline,markcase=used]{scrlayer-scrpage} % Einfügen der "headsepline" mit der Kapitel Überschrift
+
+\clearpairofpagestyles
+
+% Kopfzeile
+\ihead{\leftmark}        % Innen (bei zweiseitigem Layout: links/rechts wechselnd): Kapitel oder Abschnitt
+\ohead{}                 % Außen: leer
+
+% Fußzeile
+\ifoot{} % Innen: leer
+\cfoot{}                 % Mitte: leer
+\ofoot{\pagemark}        % Außen: Seitenzahl
+
+\usepackage[hang, flushmargin]{footmisc}  % Fußnoten-Layout anpassen
+\setlength{\footnotemargin}{1em}          % Abstand zwischen Nummer und Text
+
+% Seitenstil aktivieren
+\pagestyle{scrheadings}
+%------- Ende der Einstellung der Kopf- und Fußzeilen.
+
+\usepackage{graphicx} % Das "graphicsx" Package ist z. B. für \includegraphics, also um Bilder einzufügen
+
+\usepackage{float} % Das "float" Package ist z. B. für den "[H]" Befehl bei "/begin{figure}", dieser bewirkt, dass die Bilder an der gewünschten Stelle angezeigt werden.
+
+\usepackage[margin=0pt,font=footnotesize,labelfont=bf]{caption}
+\captionsetup[figure]{singlelinecheck=false}
+\setlength\parindent{0pt} % Keine Whitespaces im Text nach einer Figure
+
+\usepackage{longtable} % Tabellen darstellen, die über mehrere Seiten gehen
+
+\usepackage{amsmath} % Mathematischen Befehle darstellen
+
+\usepackage{listings} % Paket für Code Auflistungen
+
+\usepackage{pythonhighlight} % Python Code
+
+\renewcommand{\lstlistingname}{Auflistung} % Code Listing -> Auflistung
+
+\usepackage{natbib} % Paket, um das Zitieren zu ermöglichen
+
+\usepackage{url} % Paket, um URLs einzubinden
+\usepackage{hyperref} % Verlinkungen 
+\hypersetup{
+  colorlinks=true,
+  linkcolor=black,
+  citecolor=black,
+  urlcolor = blue,
+} % URLs Blau, Rest Schwarz
+
+\lstdefinestyle{mystyle}{
+basicstyle=\small\sffamily,
+numbers=left,
+numberstyle=\tiny,
+frame=tb,
+columns=fullflexible,
+showstringspaces=false
+}
+\lstset{style=mystyle}
+
+% Führt Füllpunkte auch für manuelle \addcontentsline-Einträge im Inhaltsverzeichnis ein
+\DeclareTOCStyleEntry[
+  indent=0pt,
+  linefill=\TOCLineLeaderFill
+]{tocline}{section}
+
+\RedeclareSectionCommand[
+  beforeskip=-.5\baselineskip,
+  afterskip=.25\baselineskip]{paragraph} % Newline nach "paragraph" Überschrift

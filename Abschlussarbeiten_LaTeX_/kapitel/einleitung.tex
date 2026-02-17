@@ -1,0 +1,30 @@
+\section{Einleitung}
+
+Unternehmen stehen zunehmend vor der Herausforderung, ihre internen Geschäftsprozesse zu digitalisieren und zu automatisieren, um wettbewerbsfähig zu bleiben. Ein zentraler Bestandteil betrieblicher Abläufe ist der Beschaffungsprozess, insbesondere die Bestellanforderung und deren Genehmigung. Die vorliegende Hausarbeit befasst sich mit der Konzeption und prototypischen Implementierung eines solchen Bestellanforderungsprozesses mit integriertem Genehmigungsworkflow auf der \gls{btp}.
+
+\subsection{Motivation und Problemstellung}
+
+In vielen Unternehmen stellt die Beschaffung einen geschäftskritischen Prozess dar, der unmittelbar die Kostenkontrolle, die Einhaltung von Budgetvorgaben und die Lieferfähigkeit beeinflusst \citep{weske2019bpm, dumas2018bpm}. Bestellanforderungen müssen in der Regel einen mehrstufigen Genehmigungsprozess durchlaufen, bevor sie in eine verbindliche Bestellung überführt werden. Dieser Genehmigungsprozess dient der Sicherstellung, dass Ausgaben im Rahmen der Unternehmensrichtlinien liegen und von den zuständigen Verantwortlichen freigegeben werden.
+
+In der Praxis sind derartige Genehmigungsprozesse jedoch häufig noch durch manuelle, papierbasierte oder E-Mail-gestützte Abläufe gekennzeichnet. Dies führt zu einer Reihe von Problemen: Genehmigungsanfragen gehen verloren oder werden verzögert bearbeitet, die Nachvollziehbarkeit einzelner Entscheidungen ist eingeschränkt, und die Einhaltung von Compliance-Vorgaben lässt sich nur schwer sicherstellen. Darüber hinaus fehlt es an einer zentralen Übersicht über den aktuellen Status offener Bestellanforderungen, was die Transparenz im gesamten Beschaffungsprozess erheblich beeinträchtigt.
+
+Vor dem Hintergrund der digitalen Transformation gewinnen integrierte Plattformlösungen an Bedeutung, die es ermöglichen, Geschäftsprozesse durchgängig zu modellieren, zu automatisieren und zu überwachen. Im SAP-Ökosystem bietet die \gls{btp} eine umfassende Plattform für die Entwicklung cloudbasierter Geschäftsanwendungen \citep{sap2024btp}. In Kombination mit dem \gls{cap} für die Anwendungsentwicklung und \gls{spa} für die Workflow-Automatisierung ergibt sich die Möglichkeit, Beschaffungsprozesse effizient und standardisiert abzubilden. Durch den Einsatz moderner \gls{bpm}-Konzepte können Unternehmen ihre Prozesse nicht nur digitalisieren, sondern auch kontinuierlich optimieren \citep{weske2019bpm}.
+
+\subsection{Zielsetzung}
+
+Ziel dieser Arbeit ist es, einen Prototyp für einen Bestellanforderungsprozess mit integriertem Genehmigungsworkflow auf der \gls{btp} zu konzipieren und zu implementieren. Dabei steht die folgende Forschungsfrage im Mittelpunkt: \textit{Wie lässt sich durch die Kombination von \gls{cap}, SAP Fiori Elements und \gls{spa} ein durchgängiger, cloudnativer Bestellanforderungsprozess mit Genehmigungsworkflow auf der \gls{btp} realisieren?} Die Anwendung soll es Mitarbeitenden ermöglichen, Bestellanforderungen über eine webbasierte Benutzeroberfläche zu erstellen, die anschließend automatisiert einem definierten Genehmigungsprozess zugeführt werden.
+
+Für die technische Umsetzung wird das \gls{cap} mit Node.js als serverseitiges Programmiermodell verwendet \citep{sap2024cap}. Die Benutzeroberfläche wird auf Basis von SAP Fiori Elements generiert, um eine konsistente und standardkonforme Benutzererfahrung zu gewährleisten. Die Genehmigungslogik wird mithilfe von \gls{spa} als Workflow realisiert, sodass Genehmigungsschritte automatisiert ausgelöst und nachverfolgt werden können. Als Datenbank kommt SAP HANA Cloud zum Einsatz, und die Bereitstellung der Gesamtanwendung erfolgt über Cloud Foundry auf der \gls{btp}.
+
+Im Einzelnen verfolgt die Arbeit die folgenden Teilziele:
+
+\begin{itemize}
+    \item Analyse der fachlichen Anforderungen an einen Bestellanforderungsprozess mit Genehmigungsworkflow,
+    \item Konzeption einer geeigneten Anwendungsarchitektur unter Verwendung der genannten SAP-Technologien,
+    \item Prototypische Implementierung der Anwendung einschließlich Datenmodell, Geschäftslogik, Benutzeroberfläche und Workflow,
+    \item Bereitstellung der Anwendung auf der \gls{btp} und Evaluation des Ergebnisses.
+\end{itemize}
+
+\subsection{Aufbau der Arbeit}
+
+Die vorliegende Arbeit gliedert sich in sechs Kapitel. Nach dieser Einleitung werden in \textbf{Kapitel~2} die theoretischen und technologischen Grundlagen erläutert. Dies umfasst eine Einführung in das \gls{bpm}, die \gls{btp} und deren relevante Dienste sowie das \gls{cap} und \gls{spa}. In \textbf{Kapitel~3} erfolgt die Konzeption der Anwendung. Hier werden die fachlichen Anforderungen analysiert, das Datenmodell entworfen und die Systemarchitektur beschrieben. \textbf{Kapitel~4} widmet sich der technischen Implementierung des Prototyps. Dabei wird auf die Umsetzung des Datenmodells, der Geschäftslogik, der Benutzeroberfläche mit SAP Fiori Elements sowie des Genehmigungsworkflows mit \gls{spa} eingegangen. In \textbf{Kapitel~5} werden die erzielten Ergebnisse vorgestellt und kritisch bewertet. Abschließend fasst \textbf{Kapitel~6} die wesentlichen Erkenntnisse der Arbeit zusammen und gibt einen Ausblick auf mögliche Erweiterungen.

@@ -1,0 +1,137 @@
+\section*{Anhang}
+\markboth{Anhang}{Anhang}
+
+\subsection*{A\quad Domänenmodell (schema.cds)}
+\begin{lstlisting}[caption={Vollständiges CDS-Schema},label={lst:anhang-schema}]
+namespace purchase.approval;
+using { cuid, managed, Currency } from '@sap/cds/common';
+
+type RequisitionStatus : String(20) enum {
+  Draft; Submitted; Approved; Rejected;
+}
+
+entity PurchaseRequisitions : cuid, managed {
+  description       : String(256)  @mandatory;
+  requester         : String(128)  @mandatory;
+  costCenter        : String(10)   @mandatory;
+  totalAmount       : Decimal(15,2);
+  currency          : Currency;
+  status            : RequisitionStatus default 'Draft';
+  workflowId        : String(256);
+  statusCriticality : Integer default 0 @UI.Hidden;
+  items             : Composition of many Items
+                        on items.parent = $self;
+}
+
+entity Items : cuid {
+  parent        : Association to PurchaseRequisitions;
+  materialNo    : String(40)   @mandatory;
+  description   : String(256);
+  quantity      : Decimal(13,3) @mandatory;
+  unitPrice     : Decimal(15,2) @mandatory;
+  currency      : Currency;
+  netAmount     : Decimal(15,2);
+}
+\end{lstlisting}
+
+\subsection*{B\quad Servicedefinition (purchase-service.cds)}
+\begin{lstlisting}[caption={CDS-Servicedefinition mit Draft-Support und Aktionen},label={lst:anhang-service}]
+using { purchase.approval as db } from '../db/schema';
+
+service PurchaseService @(path: '/purchase') {
+  @odata.draft.enabled
+  entity PurchaseRequisitions
+    as projection on db.PurchaseRequisitions actions {
+      action submit() returns PurchaseRequisitions;
+  };
+  entity Items as projection on db.Items;
+
+  action workflowCallback (
+    workflowId : String,
+    status     : String,
+    comment    : String
+  ) returns PurchaseRequisitions;
+
+  function getSpaInboxUrl() returns String;
+}
+\end{lstlisting}
+
+\subsection*{C\quad OpenAPI-Spezifikation (Callback-Action)}
+\begin{lstlisting}[caption={OpenAPI-Spezifikation für den Workflow-Callback},label={lst:anhang-openapi}]
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "Purchase Approval Callback",
+    "version": "1.0.0"
+  },
+  "paths": {
+    "/purchase/workflowCallback": {
+      "post": {
+        "operationId": "workflowCallback",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "workflowId": { "type": "string" },
+                  "status": {
+                    "type": "string",
+                    "enum": ["APPROVED", "REJECTED"]
+                  },
+                  "comment": { "type": "string" }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
+\end{lstlisting}
+
+\subsection*{D\quad MTA-Deskriptor (mta.yaml -- Auszug)}
+\begin{lstlisting}[caption={MTA-Deskriptor mit Modulen und Ressourcen},label={lst:anhang-mta}]
+ID: purchase-approval
+version: 1.0.0
+modules:
+  - name: purchase-approval-srv
+    type: nodejs
+    path: gen/srv
+    requires:
+      - name: purchase-approval-db
+      - name: purchase-approval-auth
+      - name: purchase-approval-destination
+    provides:
+      - name: srv-api
+        properties:
+          srv-url: ${default-url}
+
+  - name: purchase-approval-db-deployer
+    type: hdb
+    path: gen/db
+    requires:
+      - name: purchase-approval-db
+
+  - name: purchase-approval-app
+    type: approuter.nodejs
+    path: app
+    requires:
+      - name: srv-api
+      - name: purchase-approval-auth
+
+resources:
+  - name: purchase-approval-db
+    type: com.sap.xs.hdi-container
+  - name: purchase-approval-auth
+    type: org.cloudfoundry.managed-service
+    parameters:
+      service: xsuaa
+      service-plan: application
+      path: ./xs-security.json
+  - name: purchase-approval-destination
+    type: org.cloudfoundry.managed-service
+    parameters:
+      service: destination
+      service-plan: lite
+\end{lstlisting}

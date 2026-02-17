@@ -1,0 +1,199 @@
+\section{Konzeption}
+\label{sec:konzeption}
+
+Aufbauend auf den im vorherigen Kapitel erarbeiteten technologischen Grundlagen wird in diesem Kapitel die Konzeption der Anwendung zur Bestellanforderungsfreigabe auf der \gls{btp} dargelegt. Zunächst werden die funktionalen und nicht-funktionalen Anforderungen systematisch erfasst und priorisiert. Darauf aufbauend wird der Architekturentwurf vorgestellt, der die Schichtenstruktur des Systems beschreibt. Anschließend werden das Datenmodell, das Prozessdesign des Genehmigungsworkflows sowie das Sicherheitskonzept erläutert.
+
+\subsection{Anforderungsanalyse}
+\label{subsec:anforderungsanalyse}
+
+Die Anforderungsanalyse bildet die Grundlage für den Entwurf und die spätere Implementierung des Systems \citep{dumas2018bpm}. Die erhobenen Anforderungen lassen sich in funktionale und nicht-funktionale Anforderungen untergliedern. Funktionale Anforderungen beschreiben das erwartete Verhalten des Systems aus Sicht der Anwender, während nicht-funktionale Anforderungen Qualitätsmerkmale und Rahmenbedingungen der technischen Umsetzung spezifizieren.
+
+\subsubsection{Funktionale Anforderungen}
+\label{subsubsec:funktionale-anforderungen}
+
+Die funktionalen Anforderungen wurden aus dem Anwendungsfall eines unternehmensinternen Beschaffungsprozesses abgeleitet. Zentrales Ziel ist es, den Lebenszyklus einer Bestellanforderung -- von der Erstellung über die Genehmigung bis zur Statusrückmeldung -- vollständig abzubilden. Tabelle~\ref{tab:funktionale-anforderungen} fasst die identifizierten funktionalen Anforderungen zusammen.
+
+\begin{table}[H]
+  \centering
+  \caption{Funktionale Anforderungen}
+  \label{tab:funktionale-anforderungen}
+  \begin{tabularx}{\textwidth}{l X l}
+    \hline
+    \textbf{ID} & \textbf{Beschreibung} & \textbf{Priorität} \\
+    \hline
+    FA1 & Benutzer können Bestellanforderungen mit zugehörigen Positionen erstellen, bearbeiten und löschen (\gls{crud}-Operationen). & Hoch \\
+    FA2 & Jede Bestellanforderung enthält eine Beschreibung, einen Anforderer, eine Kostenstelle sowie beliebig viele Positionen mit Materialnummer, Beschreibung, Menge und Einzelpreis. & Hoch \\
+    FA3 & Nettobeträge der einzelnen Positionen sowie der Gesamtbetrag der Bestellanforderung werden automatisch berechnet. & Hoch \\
+    FA4 & Benutzer können eine Bestellanforderung über die Aktion \glqq Freigeben\grqq{} zur Genehmigung einreichen. & Hoch \\
+    FA5 & Die Freigabe löst einen Genehmigungsworkflow in \gls{spa} aus, der über einen \gls{api}-Trigger gestartet wird. & Hoch \\
+    FA6 & Der Genehmiger kann die Bestellanforderung in der My-Inbox-Anwendung von \gls{spa} genehmigen oder ablehnen. & Hoch \\
+    FA7 & Nach der Entscheidung des Genehmigers wird der Status der Bestellanforderung über einen Callback-Endpunkt in der \gls{cap}-Anwendung aktualisiert. & Hoch \\
+    FA8 & Unvollständige Bestellanforderungen können als Entwurf gespeichert und zu einem späteren Zeitpunkt fortgesetzt werden (Draft-Unterstützung). & Mittel \\
+    FA9 & Jede Statusänderung einer Bestellanforderung wird in einer Statushistorie protokolliert, einschließlich Zeitstempel, auslösender Quelle und optionalem Kommentar. & Mittel \\
+    FA10 & Benutzer können Dokumente und Bilder (z.\,B. PDF, PNG) als Anhänge zu einer Bestellanforderung hochladen, herunterladen und löschen. Die Anhänge werden im Genehmigungsworkflow als Metadaten mit direkten Download-URLs bereitgestellt. & Mittel \\
+    FA11 & Eine bereits genehmigte oder abgelehnte Bestellanforderung kann erneut bearbeitet werden. Beim Speichern wird der Status automatisch auf \texttt{Draft} zurückgesetzt, sodass eine erneute Freigabe möglich ist. & Mittel \\
+    \hline
+  \end{tabularx}
+\end{table}
+
+Die Anforderungen FA1 bis FA7 wurden mit der Priorität \glqq Hoch\grqq{} eingestuft, da sie den Kernprozess der Bestellanforderungsfreigabe abbilden und für eine funktionsfähige Anwendung unverzichtbar sind. Die Draft-Unterstützung (FA8), die Statushistorie (FA9), die Dokumentenanhänge (FA10) sowie die Wiederbearbeitbarkeit (FA11) erhielten die Priorität \glqq Mittel\grqq{}, da sie die Benutzerfreundlichkeit und Nachvollziehbarkeit signifikant erhöhen, jedoch nicht für den grundlegenden Genehmigungsprozess erforderlich sind.
+
+\subsubsection{Nicht-funktionale Anforderungen}
+\label{subsubsec:nichtfunktionale-anforderungen}
+
+Neben den funktionalen Anforderungen wurden nicht-funktionale Anforderungen definiert, die die technischen Rahmenbedingungen und Qualitätsmerkmale des Systems festlegen. Diese sind in Tabelle~\ref{tab:nichtfunktionale-anforderungen} aufgeführt.
+
+\begin{table}[H]
+  \centering
+  \caption{Nicht-funktionale Anforderungen}
+  \label{tab:nichtfunktionale-anforderungen}
+  \begin{tabularx}{\textwidth}{l X l}
+    \hline
+    \textbf{ID} & \textbf{Beschreibung} & \textbf{Priorität} \\
+    \hline
+    NFA1 & Die Anwendung wird cloud-nativ auf der \gls{btp} bereitgestellt und nutzt die \gls{cf}-Laufzeitumgebung. & Hoch \\
+    NFA2 & Die Authentifizierung und Autorisierung erfolgt über den \gls{xsuaa}-Service der \gls{btp}. & Hoch \\
+    NFA3 & Die Benutzeroberfläche ist responsiv und unterstützt die Nutzung auf Desktop-, Tablet- und Mobilgeräten. & Mittel \\
+    NFA4 & Die Kommunikation zwischen den Komponenten erfolgt über \gls{rest}ful \gls{api}s und standardisierte Protokolle (\gls{odata} V4). & Hoch \\
+    \hline
+  \end{tabularx}
+\end{table}
+
+\subsection{Architekturentwurf}
+\label{subsec:architekturentwurf}
+
+Der Architekturentwurf orientiert sich an einer klassischen Dreischichtarchitektur, die in eine Datenbank-, eine Service- und eine Präsentationsschicht untergliedert ist. Diese Schichtung ermöglicht eine klare Trennung der Verantwortlichkeiten und erleichtert sowohl die Wartbarkeit als auch die Erweiterbarkeit des Systems. Im Folgenden werden die einzelnen Schichten und ihre Verantwortlichkeiten erläutert.
+
+\subsubsection{Datenbankschicht}
+
+Die Datenbankschicht bildet das Fundament der Anwendung und ist für die persistente Speicherung aller Geschäftsdaten verantwortlich. Als Datenbanktechnologie kommt SAP HANA Cloud zum Einsatz \citep{sap2024hana}, die über einen \gls{hdi}-Container bereitgestellt wird. Das Datenbankschema wird deklarativ mithilfe von \gls{cds} definiert und bei der Bereitstellung automatisch in die entsprechenden HANA-Artefakte transformiert. Dieser Ansatz stellt sicher, dass das Datenmodell versioniert und reproduzierbar in verschiedenen Umgebungen bereitgestellt werden kann.
+
+\subsubsection{Service-Schicht}
+
+Die Service-Schicht stellt den zentralen Verarbeitungskern der Anwendung dar. Sie wird als \gls{cap}-Anwendung auf Basis von Node.js implementiert und exponiert die Geschäftslogik als \gls{odata}-V4-Service. Die wesentlichen Aufgaben der Service-Schicht umfassen:
+
+\begin{itemize}
+  \item Die Bereitstellung von \gls{crud}-Operationen für Bestellanforderungen und deren Positionen,
+  \item die automatische Berechnung von Nettobeträgen und Gesamtbeträgen,
+  \item die Validierung der Eingabedaten bei der Freigabe einer Bestellanforderung,
+  \item den Start des Genehmigungsworkflows in \gls{spa} über die \gls{api}-Schnittstelle und
+  \item die Verarbeitung des Callback-Aufrufs nach Abschluss des Genehmigungsprozesses.
+\end{itemize}
+
+Die Anbindung an \gls{spa} erfolgt über einen dedizierten Workflow-Client, der den OAuth2 Client Credentials Flow zur Authentifizierung nutzt und die Kommunikation mit der \gls{spa}-\gls{api} kapselt.
+
+\subsubsection{Präsentationsschicht}
+
+Die Präsentationsschicht besteht aus zwei Komponenten. Die primäre Benutzeroberfläche wird mithilfe von SAP Fiori Elements realisiert und basiert auf dem List-Report- und Object-Page-Floorplan. Über deklarative \gls{cds}-Annotationen wird die Benutzeroberfläche direkt aus dem Service-Modell generiert, wodurch ein konsistentes und SAP-konformes Benutzererlebnis gewährleistet wird. Die zweite Komponente der Präsentationsschicht ist die My-Inbox-Anwendung von \gls{spa}, in der Genehmiger ihre Aufgaben einsehen und bearbeiten können.
+
+\subsection{Datenmodell}
+\label{subsec:datenmodell}
+
+Das Datenmodell bildet die zentrale Informationsstruktur der Anwendung ab und wird deklarativ in \gls{cds} definiert. Es besteht aus zwei Entitäten, die über eine Kompositionsbeziehung miteinander verknüpft sind: \texttt{PurchaseRequisitions} als übergeordnete Entität und \texttt{Items} als untergeordnete Positionsentität.
+
+Tabelle~\ref{tab:entity-purchaserequisitions} beschreibt die Attribute der Entität \texttt{PurchaseRequisitions}, die eine einzelne Bestellanforderung repräsentiert.
+
+\begin{table}[H]
+  \centering
+  \caption{Attribute der Entität PurchaseRequisitions}
+  \label{tab:entity-purchaserequisitions}
+  \begin{tabularx}{\textwidth}{l l X l}
+    \hline
+    \textbf{Attribut} & \textbf{Datentyp} & \textbf{Beschreibung} & \textbf{Constraint} \\
+    \hline
+    ID            & UUID            & Eindeutiger Bezeichner       & Primärschlüssel \\
+    description   & String(256)     & Bezeichnung der Anforderung  & Pflichtfeld \\
+    requester     & String(128)     & Name des Anforderers         & Pflichtfeld \\
+    costCenter    & String(10)      & Zugeordnete Kostenstelle     & Pflichtfeld \\
+    totalAmount   & Decimal(15,2)   & Berechneter Gesamtbetrag     & Berechnet \\
+    currency      & Currency        & Währungsschlüssel            & -- \\
+    status        & String(20)      & Prozessstatus                & Standard: Draft \\
+    workflowId    & String(256)     & ID der Workflow-Instanz      & -- \\
+    approverComment & String(1000)  & Kommentar des Genehmigers    & -- \\
+    approvedBy    & String(128)     & Name des Entscheiders        & -- \\
+    decidedAt     & Timestamp       & Zeitpunkt der Entscheidung   & -- \\
+    items         & Composition     & Zugehörige Positionen        & 1:n \\
+    statusHistory & Composition     & Protokollierte Statusänderungen & 1:n \\
+    attachments   & Composition     & Hochgeladene Dokumentenanhänge & 1:n \\
+    \hline
+  \end{tabularx}
+\end{table}
+
+Das Attribut \texttt{status} kann die Werte \texttt{Draft}, \texttt{Submitted}, \texttt{Approved} und \texttt{Rejected} annehmen und bildet somit den vollständigen Lebenszyklus einer Bestellanforderung ab. Das Feld \texttt{workflowId} dient der Zuordnung einer Bestellanforderung zu ihrer zugehörigen Workflow-Instanz in \gls{spa} und wird erst beim Einreichen der Anforderung befüllt. Die Felder \texttt{approverComment}, \texttt{approvedBy} und \texttt{decidedAt} speichern die Genehmigungsinformationen, die über den Callback von \gls{spa} zurückgemeldet werden.
+
+Tabelle~\ref{tab:entity-items} beschreibt die Attribute der Entität \texttt{Items}, die eine einzelne Position innerhalb einer Bestellanforderung darstellt.
+
+\begin{table}[H]
+  \centering
+  \caption{Attribute der Entität Items}
+  \label{tab:entity-items}
+  \begin{tabularx}{\textwidth}{l l X l}
+    \hline
+    \textbf{Attribut} & \textbf{Datentyp} & \textbf{Beschreibung} & \textbf{Constraint} \\
+    \hline
+    ID            & UUID            & Eindeutiger Bezeichner       & Primärschlüssel \\
+    parent        & Association     & Verweis auf die übergeordnete Bestellanforderung & Fremdschlüssel \\
+    materialNo    & String(40)      & Materialnummer               & Pflichtfeld \\
+    description   & String(256)     & Beschreibung der Position    & -- \\
+    quantity      & Decimal(13,3)   & Bestellmenge                 & Pflichtfeld \\
+    unitPrice     & Decimal(15,2)   & Einzelpreis pro Mengeneinheit & Pflichtfeld \\
+    currency      & Currency        & Währungsschlüssel            & -- \\
+    netAmount     & Decimal(15,2)   & Berechneter Nettobetrag      & Berechnet \\
+    \hline
+  \end{tabularx}
+\end{table}
+
+Die Beziehung zwischen \texttt{PurchaseRequisitions} und \texttt{Items} ist als Komposition modelliert. Dies bedeutet, dass Positionen existenzabhängig von ihrer übergeordneten Bestellanforderung sind: Wird eine Bestellanforderung gelöscht, werden automatisch auch alle zugehörigen Positionen entfernt. Der Nettobetrag einer Position ergibt sich aus der Multiplikation von Menge (\texttt{quantity}) und Einzelpreis (\texttt{unitPrice}). Der Gesamtbetrag der Bestellanforderung wird als Summe aller Positionsnettobeträge berechnet.
+
+Neben den Positionen verfügt die Bestellanforderung über zwei weitere Kompositionen. Die Entität \texttt{StatusHistory} protokolliert jeden Statuswechsel mit dem alten und neuen Status, einem Zeitstempel, dem auslösenden Benutzer, einem optionalen Kommentar sowie der Quelle der Änderung (\texttt{USER}, \texttt{WORKFLOW} oder \texttt{CALLBACK}). Diese Protokollierung ermöglicht eine lückenlose Nachvollziehbarkeit des Genehmigungsprozesses.
+
+Die Komposition \texttt{attachments} wird über das offizielle CAP-Plugin \texttt{@cap-js/attachments} realisiert. Dieses Plugin stellt eine vorkonfigurierte \texttt{Attachments}-Entität bereit, die Dateiname, MIME-Typ und den binären Inhalt als BLOB in der HANA-Datenbank speichert. Die Konfiguration als datenbankbasierter Speicher (\texttt{kind: db}) macht einen externen Object Store überflüssig. Durch die Kompositionsbeziehung werden die Anhänge im Draft-Modus gemeinsam mit der übergeordneten Bestellanforderung verwaltet und bei Fiori Elements automatisch als Upload-Bereich in der Object Page dargestellt.
+
+\subsection{Prozessdesign}
+\label{subsec:prozessdesign}
+
+Der Genehmigungsprozess für Bestellanforderungen erstreckt sich über zwei Systeme -- die \gls{cap}-Anwendung und \gls{spa} -- und durchläuft mehrere definierte Phasen. Im Folgenden wird der End-to-End-Prozess beschrieben.
+
+\subsubsection{Ablauf des Genehmigungsprozesses}
+
+Der Prozess beginnt mit der Erstellung einer Bestellanforderung durch den Anforderer in der Fiori-Elements-Oberfläche. Die Anforderung wird zunächst im Status \texttt{Draft} angelegt und kann beliebig bearbeitet werden. Der Anforderer fügt Positionen mit Materialnummer, Menge und Einzelpreis hinzu, wobei die Nettobeträge und der Gesamtbetrag automatisch berechnet werden.
+
+Sobald die Bestellanforderung vollständig erfasst ist, löst der Anforderer über die Aktion \glqq Freigeben\grqq{} den Genehmigungsprozess aus. Dabei werden zunächst serverseitige Validierungen durchgeführt: Es wird geprüft, ob sich die Anforderung nicht bereits im Status \texttt{Submitted} befindet, ob mindestens eine Position vorhanden ist und ob der Gesamtbetrag größer als null ist. Nach erfolgreicher Validierung wird der Status auf \texttt{Submitted} gesetzt und ein Genehmigungsworkflow in \gls{spa} über die Workflow-\gls{api} gestartet. Die zurückgegebene Workflow-Instanz-ID wird in der Bestellanforderung gespeichert.
+
+Der Genehmiger erhält die Aufgabe in der My-Inbox-Anwendung von \gls{spa}. Dort werden die relevanten Informationen der Bestellanforderung -- Beschreibung, Anforderer und Gesamtbetrag -- angezeigt. Der Genehmiger kann die Anforderung genehmigen oder ablehnen.
+
+Nach der Entscheidung des Genehmigers ruft \gls{spa} den Callback-Endpunkt der \gls{cap}-Anwendung auf und übermittelt die Workflow-ID, den Entscheidungsstatus, den Namen des Genehmigers sowie einen optionalen Kommentar. Die \gls{cap}-Anwendung identifiziert die zugehörige Bestellanforderung anhand der Workflow-ID und aktualisiert den Status auf \texttt{Approved} oder \texttt{Rejected}. Die Genehmigungsinformationen werden in der Entität gespeichert und in der Benutzeroberfläche angezeigt. Jede Statusänderung wird in der Statushistorie protokolliert. Sollte der Workflow-Start fehlschlagen, wird der Status automatisch auf \texttt{Draft} zurückgesetzt, sodass der Anforderer den Vorgang erneut auslösen kann.
+
+Darüber hinaus unterstützt der Prozess die erneute Bearbeitung nach einer Genehmigung oder Ablehnung. Wird eine Bestellanforderung im Status \texttt{Approved} oder \texttt{Rejected} bearbeitet und gespeichert, setzt die Anwendung den Status automatisch auf \texttt{Draft} zurück und entfernt die vorherigen Genehmigungsinformationen. Auf diese Weise kann der Anforderer die Anforderung überarbeiten und erneut zur Genehmigung einreichen.
+
+\subsubsection{Workflow-Design in SAP Build Process Automation}
+
+Der in \gls{spa} modellierte Genehmigungsprozess folgt einer linearen Struktur und besteht aus den folgenden Schritten:
+
+\begin{enumerate}
+  \item \textbf{\gls{api}-Trigger:} Der Prozess wird durch einen \gls{api}-Aufruf aus der \gls{cap}-Anwendung gestartet. Der Kontextparameter enthält die Bestellanforderungs-ID, die Beschreibung, den Anforderer, die Kostenstelle, den Gesamtbetrag, die einzelnen Positionen als strukturierte Liste, die Metadaten der Anhänge (Dateiname, MIME-Typ und direkte Download-URL) sowie einen Deep Link zur Fiori-Object-Page der Bestellanforderung.
+  \item \textbf{Genehmigungsformular:} Eine Benutzeraufgabe wird erstellt und dem Genehmiger in der My Inbox zugewiesen. Das Formular zeigt die übermittelten Kontextdaten einschließlich der Positionsliste und der Anhänge an und bietet die Optionen \glqq Genehmigen\grqq{} und \glqq Ablehnen\grqq{}. Über den Deep Link kann der Genehmiger direkt zur Detailansicht der Bestellanforderung in der Fiori-Anwendung navigieren.
+  \item \textbf{Bedingung:} Basierend auf der Entscheidung des Genehmigers wird der Prozessfluss verzweigt.
+  \item \textbf{Callback-Aktion:} Unabhängig von der Entscheidung wird ein HTTP-Aufruf an den Callback-Endpunkt der \gls{cap}-Anwendung ausgeführt, der die Workflow-ID, den Entscheidungsstatus, den Namen des Genehmigers, einen optionalen Kommentar sowie den Zeitpunkt der Entscheidung übermittelt.
+  \item \textbf{Prozessende:} Der Workflow wird abgeschlossen.
+\end{enumerate}
+
+\subsection{Sicherheitskonzept}
+\label{subsec:sicherheitskonzept}
+
+Das Sicherheitskonzept der Anwendung adressiert die Authentifizierung, die Autorisierung sowie die sichere Kommunikation zwischen den beteiligten Diensten auf der \gls{btp}.
+
+\subsubsection{Authentifizierung und Autorisierung}
+
+Die Authentifizierung der Benutzer erfolgt über den \gls{xsuaa}-Service der \gls{btp} \citep{sap2024xsuaa}. Dieser fungiert als OAuth2-Autorisierungsserver und stellt \gls{jwt}-basierte Zugriffstoken aus, die bei jedem Zugriff auf die \gls{cap}-Anwendung validiert werden. Die Autorisierung basiert auf einem rollenbasierten Zugriffsmodell, in dem zwei Rollen definiert sind:
+
+\begin{itemize}
+  \item \textbf{Requester:} Berechtigt zum Erstellen, Bearbeiten und Einreichen von Bestellanforderungen.
+  \item \textbf{Approver:} Berechtigt zum Genehmigen oder Ablehnen von Bestellanforderungen in der My Inbox von \gls{spa}.
+\end{itemize}
+
+\subsubsection{Service-zu-Service-Kommunikation}
+
+Die Kommunikation zwischen der \gls{cap}-Anwendung und \gls{spa} erfolgt über den OAuth2 Client Credentials Flow. Dabei authentifiziert sich die \gls{cap}-Anwendung mit einer Client-ID und einem Client-Secret beim Token-Endpunkt des \gls{xsuaa}-Service und erhält ein Zugriffstoken, das für die nachfolgenden \gls{api}-Aufrufe verwendet wird. Dieser Mechanismus gewährleistet, dass ausschließlich autorisierte Dienste den Genehmigungsworkflow starten können.
+
+Für die Anbindung externer Dienste werden BTP-Destinations genutzt. Diese kapseln die Verbindungsinformationen -- einschließlich der Endpunkt-URL und der Authentifizierungsparameter -- und ermöglichen eine zentrale Verwaltung der Service-Konnektivität. Durch die Trennung von Anwendungslogik und Konfigurationsdaten wird die Sicherheit erhöht, da sensible Zugangsdaten nicht im Quellcode hinterlegt werden müssen.

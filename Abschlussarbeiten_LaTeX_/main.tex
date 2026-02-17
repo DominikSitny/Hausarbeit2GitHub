@@ -1,0 +1,75 @@
+% ==========================================
+% LaTeX-Vorlage: Hausarbeit
+% Thema: Bestellanforderungsprozess mit SAP BTP
+% ==========================================
+
+\input{settings}
+\makeglossaries
+
+\begin{document}
+
+% Titelseite
+\newgeometry{left=2cm,right=2cm,top=2cm,bottom=2cm}
+\include{kapitel/titel}
+\restoregeometry
+
+% Abstract
+\cleardoublepage
+\thispagestyle{empty}
+\include{hilfsseiten/abstract}
+
+\pagenumbering{Roman}
+
+% Inhaltsverzeichnis
+\cleardoublepage
+\phantomsection
+\tableofcontents
+\cleardoublepage
+
+% Tabellenverzeichnis
+\phantomsection
+\addcontentsline{toc}{section}{Tabellenverzeichnis}
+\listoftables
+\cleardoublepage
+
+% Abkürzungsverzeichnis
+\phantomsection
+\addcontentsline{toc}{section}{Abkürzungsverzeichnis}
+\printglossary[type=\acronymtype,title={Abkürzungsverzeichnis},nonumberlist]
+\include{hilfsseiten/abkürzungen}
+
+\newcounter{savepage}
+\setcounter{savepage}{\value{page}}
+
+\pagenumbering{arabic}
+
+\include{kapitel/einleitung}
+\include{kapitel/grundlagen}
+\include{kapitel/konzeption}
+\include{kapitel/implementierung}
+\include{kapitel/ergebnisse}
+\include{kapitel/fazit}
+
+\pagenumbering{Roman}
+\setcounter{page}{\value{savepage}}
+
+% Literaturverzeichnis
+\cleardoublepage
+\phantomsection
+\addcontentsline{toc}{section}{Literatur}
+\bibliographystyle{dinat}
+\bibliography{Bibliothek}
+
+% Übersicht verwendeter Hilfsmittel
+\cleardoublepage
+\phantomsection
+\addcontentsline{toc}{section}{Übersicht verwendeter Hilfsmittel}
+\include{hilfsseiten/hilfsmittel}
+
+% Anhang
+\cleardoublepage
+\phantomsection
+\addcontentsline{toc}{section}{Anhang}
+\include{hilfsseiten/anhang}
+
+\end{document}

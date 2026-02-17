@@ -1,0 +1,141 @@
+\section{Ergebnisse und Evaluation}
+
+Das vorliegende Kapitel stellt die Ergebnisse der prototypischen Implementierung vor und bewertet diese anhand der definierten Anforderungen. Zunächst wird der durchgeführte Funktionstest beschrieben, der den gesamten End-to-End-Ablauf von der Erstellung einer Bestellanforderung bis zur Genehmigung beziehungsweise Ablehnung durch den Workflow umfasst. Anschließend erfolgt ein systematischer Abgleich mit den in Kapitel~3 formulierten fachlichen Anforderungen. Abschließend wird der Prototyp hinsichtlich seiner Stärken, aufgetretener Herausforderungen und bestehender Limitierungen kritisch bewertet.
+
+\subsection{Funktionstest}
+
+Zur Validierung des implementierten Prototyps wurde ein manueller Funktionstest durchgeführt, der den vollständigen Prozess von der Anlage einer Bestellanforderung bis zum Abschluss des Genehmigungsworkflows abdeckt. Dabei wurde der Genehmigungspfad ebenso getestet wie der Ablehnungspfad. Die Tests wurden auf der bereitgestellten \gls{btp}-Umgebung in Cloud Foundry durchgeführt, wobei die Fiori-Elements-Anwendung im Browser aufgerufen und die Genehmigung in der My-Inbox-Anwendung von \gls{spa} vorgenommen wurde.
+
+\paragraph{Genehmigungspfad (Happy Path)}
+
+Der Genehmigungspfad umfasst die folgenden Schritte, die sequenziell ausgeführt und jeweils auf ihr erwartetes Verhalten hin überprüft wurden:
+
+\begin{enumerate}
+    \item \textbf{Anwendung aufrufen:} Der Benutzer öffnet die Fiori-Elements-Anwendung im Browser. Die Listenansicht (List Report) wird angezeigt und enthält gegebenenfalls bereits vorhandene Bestellanforderungen mit ihrem jeweiligen Status.
+    \item \textbf{Neue Bestellanforderung anlegen:} Durch Klicken auf die Schaltfläche \textit{Anlegen} wird eine neue Bestellanforderung im Entwurfsmodus erstellt. Der Status wird automatisch auf \texttt{Draft} gesetzt.
+    \item \textbf{Kopfdaten erfassen:} Der Benutzer füllt die Pflichtfelder \textit{Beschreibung}, \textit{Anforderer} und \textit{Kostenstelle} aus.
+    \item \textbf{Positionen hinzufügen:} Im Abschnitt \textit{Positionen} werden eine oder mehrere Positionen angelegt. Für jede Position werden die Materialnummer, die Menge und der Einzelpreis eingetragen. Das Feld \textit{Nettobetrag} (\texttt{netAmount}) wird automatisch als Produkt aus Menge und Einzelpreis berechnet.
+    \item \textbf{Anhänge hochladen:} Im Abschnitt \textit{Anhänge} können Dokumente (z.\,B. PDF, Bilder) per Drag-and-Drop oder Dateiauswahl hochgeladen werden. Die Dateien werden als BLOB in der HANA-Datenbank gespeichert.
+    \item \textbf{Speichern:} Beim Speichern der Bestellanforderung wird der \texttt{SAVE}-Handler ausgelöst. Dieser berechnet die Nettobeträge aller Positionen und summiert sie zum Gesamtbetrag (\texttt{totalAmount}). Der Gesamtbetrag wird in der Kopfzeile der Object Page angezeigt. Die Statushistorie dokumentiert die Erstellung.
+    \item \textbf{Freigeben:} Der Benutzer klickt auf die Schaltfläche \textit{Freigeben}, die in allen Status außer \texttt{Submitted} sichtbar ist. Die \texttt{submit}-Action validiert, dass sich die Anforderung nicht bereits im Status \texttt{Submitted} befindet, dass mindestens eine Position vorhanden und der Gesamtbetrag größer als null ist. Der Status wird auf \texttt{Submitted} geändert, und der Genehmigungsworkflow wird in \gls{spa} gestartet. Die einzelnen Positionen, die Anhänge-Metadaten mit Download-URLs sowie ein Deep Link zur Fiori-Object-Page werden als Kontext übergeben. Die Statusänderung wird in der Statushistorie protokolliert.
+    \item \textbf{Genehmigung in der My Inbox:} Der zuständige Genehmiger öffnet die My-Inbox-Anwendung von \gls{spa}. Dort wird die erstellte Genehmigungsaufgabe mit den vollständigen Kontextdaten der Bestellanforderung angezeigt -- einschließlich der Positionsliste, der Anhänge als Download-Links und einem Deep Link zur Fiori-Anwendung. Der Genehmiger klickt auf \textit{Genehmigen}.
+    \item \textbf{Callback und Statusaktualisierung:} Nach der Genehmigung in \gls{spa} wird der Callback-Endpoint \texttt{workflowCallback} aufgerufen. Dieser setzt den Status der zugehörigen Bestellanforderung auf \texttt{Approved} und speichert die Genehmigungsinformationen (Entscheider, Kommentar, Zeitpunkt). In der Fiori-Anwendung wird der aktualisierte Status nach dem Neuladen in grüner Farbe (Criticality~3) angezeigt. Die Statusänderung wird in der Statushistorie mit der Quelle \texttt{CALLBACK} protokolliert.
+\end{enumerate}
+
+\paragraph{Ablehnungspfad}
+
+Der Ablehnungspfad verläuft identisch bis einschließlich Schritt~6. Anstatt die Aufgabe in der My Inbox zu genehmigen, wählt der Genehmiger die Option \textit{Ablehnen}. Der Callback-Endpoint empfängt daraufhin den Status \texttt{REJECTED} und setzt den Status der Bestellanforderung auf \texttt{Rejected}. Zusätzlich wird die \texttt{workflowId} zurückgesetzt, damit eine erneute Einreichung möglich ist. In der Fiori-Oberfläche wird dieser Status in roter Farbe (Criticality~1) dargestellt. Die Schaltflächen \textit{Bearbeiten}, \textit{Löschen} und \textit{Freigeben} sind im Status \texttt{Rejected} verfügbar, sodass der Anforderer die Anforderung überarbeiten und erneut einreichen kann.
+
+\paragraph{Ergebnisse der Testfälle}
+
+Tabelle~\ref{tab:testfaelle} fasst die durchgeführten Testfälle zusammen. Alle definierten Testfälle wurden erfolgreich bestanden.
+
+\begin{table}[H]
+\centering
+\caption{Übersicht der durchgeführten Testfälle}
+\label{tab:testfaelle}
+\begin{tabularx}{\textwidth}{c|X|X|c}
+\hline
+\textbf{Test-ID} & \textbf{Testfall} & \textbf{Erwartetes Ergebnis} & \textbf{Ergebnis} \\
+\hline
+T1 & Bestellanforderung anlegen und speichern & Bestellanforderung wird mit Status \texttt{Draft} gespeichert & Bestanden \\
+\hline
+T2 & Positionen mit Menge und Einzelpreis hinzufügen & Nettobetrag je Position und Gesamtbetrag werden automatisch berechnet & Bestanden \\
+\hline
+T3 & Freigeben ohne Positionen & Fehlermeldung: Mindestens eine Position erforderlich & Bestanden \\
+\hline
+T4 & Freigeben mit gültigen Positionen & Status wechselt zu \texttt{Submitted}, Workflow wird gestartet & Bestanden \\
+\hline
+T5 & Genehmigung in der SPA My Inbox & Status wird über Callback auf \texttt{Approved} gesetzt & Bestanden \\
+\hline
+T6 & Ablehnung in der SPA My Inbox & Status wird über Callback auf \texttt{Rejected} gesetzt & Bestanden \\
+\hline
+T7 & Draft-Unterstützung & Entwurf kann gespeichert, geschlossen und später fortgesetzt werden & Bestanden \\
+\hline
+T8 & Dokumentenanhänge hochladen und herunterladen & Dateien können hochgeladen, angezeigt und heruntergeladen werden & Bestanden \\
+\hline
+T9 & Statushistorie nach Einreichung & Alle Statusänderungen werden mit Zeitstempel, Quelle und Kommentar protokolliert & Bestanden \\
+\hline
+T10 & Wiederbearbeitung nach Genehmigung/Ablehnung & Status wird beim Speichern auf \texttt{Draft} zurückgesetzt, erneute Freigabe möglich & Bestanden \\
+\hline
+T11 & Anhänge-Metadaten im Workflow-Kontext & Positionen, Anhänge-URLs und Deep Link werden im SPA-Genehmigungsformular angezeigt & Bestanden \\
+\hline
+\end{tabularx}
+\end{table}
+
+\subsection{Abgleich mit Anforderungen}
+
+In Kapitel~3 wurden funktionale Anforderungen an den Prototyp formuliert. Tabelle~\ref{tab:anforderungen} stellt die Anforderungen den umgesetzten Funktionalitäten gegenüber und dokumentiert deren Erfüllungsgrad.
+
+\begin{table}[H]
+\centering
+\caption{Abgleich der funktionalen Anforderungen mit der Implementierung}
+\label{tab:anforderungen}
+\begin{tabularx}{\textwidth}{c|X|c|X}
+\hline
+\textbf{ID} & \textbf{Anforderung} & \textbf{Erfüllt} & \textbf{Bemerkung} \\
+\hline
+FA1 & Bestellanforderungen mit Kopfdaten erstellen & Ja & Felder Beschreibung, Anforderer und Kostenstelle sind als Pflichtfelder im CDS-Modell definiert \\
+\hline
+FA2 & Positionen mit Material, Menge und Preis erfassen & Ja & Items-Entität mit Komposition realisiert; Nettobetrag wird automatisch berechnet \\
+\hline
+FA3 & Automatische Betragsberechnung & Ja & Nettobetrag pro Position und Gesamtbetrag werden im \texttt{SAVE}-Handler und in der \texttt{submit}-Action berechnet \\
+\hline
+FA4 & Statusverwaltung über den Lebenszyklus & Ja & Vier Status implementiert: Draft, Submitted, Approved, Rejected mit farblicher Darstellung \\
+\hline
+FA5 & Freigabeprozess mit Validierung & Ja & \texttt{submit}-Action prüft Vorhandensein von Positionen und positiven Gesamtbetrag \\
+\hline
+FA6 & Integration eines Genehmigungsworkflows & Ja & Workflow wird über die SPA-\gls{api} gestartet; OAuth2 Client Credentials Flow mit Retry-Mechanismus \\
+\hline
+FA7 & Genehmigung und Ablehnung durch Genehmiger & Ja & My Inbox in SPA zeigt Aufgabe an; Callback-Endpoint aktualisiert den Status \\
+\hline
+FA8 & Draft-Unterstützung & Ja & \texttt{@odata.draft.enabled} aktiviert; Entwürfe können gespeichert und fortgesetzt werden \\
+\hline
+FA9 & Statushistorie & Ja & \texttt{StatusHistory}-Entität protokolliert jeden Statuswechsel mit Quelle (USER, WORKFLOW, CALLBACK) \\
+\hline
+FA10 & Dokumentenanhänge & Ja & \texttt{@cap-js/attachments}-Plugin mit BLOB-Speicherung in HANA; Upload, Download und Löschung in der Fiori-Oberfläche; Metadaten mit Download-URLs im Workflow-Kontext \\
+\hline
+FA11 & Wiederbearbeitbarkeit & Ja & Status-Reset auf \texttt{Draft} beim Speichern einer nicht-Draft-Anforderung; Genehmigungsinformationen werden entfernt \\
+\hline
+\end{tabularx}
+\end{table}
+
+Sämtliche elf funktionalen Anforderungen konnten im Rahmen des Prototyps vollständig umgesetzt werden. Die Anforderungen FA1 bis FA5 betreffen die Kernfunktionalität der Bestellanforderungsverwaltung und werden durch das \gls{cap}-Datenmodell, die Fiori-Elements-Oberfläche und die serverseitige Geschäftslogik abgedeckt. Die Anforderungen FA6 und FA7 beziehen sich auf die Workflow-Integration und werden durch den \texttt{WorkflowClient} sowie den \texttt{workflowCallback}-Endpoint realisiert. Die Anforderung FA8 wird durch die native Draft-Unterstützung des \gls{cap} in Kombination mit Fiori Elements erfüllt. Die Anforderung FA9 wird durch die \texttt{StatusHistory}-Entität mit automatischer Protokollierung in allen Event-Handlern umgesetzt. Die Anforderung FA10 wird durch das offizielle \texttt{@cap-js/attachments}-Plugin realisiert, das eine vollständige Anhängeverwaltung einschließlich der Integration in den Workflow-Kontext bereitstellt. Die Anforderung FA11 wird durch den Status-Reset-Mechanismus im \texttt{before SAVE}-Handler erfüllt.
+
+\subsection{Bewertung}
+
+Auf Grundlage der Testergebnisse und des Anforderungsabgleichs wird der Prototyp im Folgenden hinsichtlich seiner Stärken, der aufgetretenen Herausforderungen sowie der bestehenden Limitierungen bewertet.
+
+\paragraph{Stärken}
+
+Eine wesentliche Stärke des gewählten Technologieansatzes liegt in der hohen Entwicklungsgeschwindigkeit, die durch das Zusammenspiel von \gls{cap} und Fiori Elements erreicht wird. Das \gls{cap} ermöglicht eine deklarative Definition des Datenmodells und der Service-Schnittstelle in \gls{cds}, woraus automatisch \gls{odata}-Endpoints, Datenbankschema und Draft-Handling generiert werden. Fiori Elements ergänzt diesen Ansatz, indem die Benutzeroberfläche vollständig annotationsgesteuert erzeugt wird. Für den gesamten Prototyp war kein manueller Frontend-Code erforderlich -- die Listenseite, die Detailseite mit Kopfdaten und Positionstabelle sowie die Aktionsschaltfläche \textit{Freigeben} werden ausschließlich über \gls{cds}-Annotationen definiert. Dies reduziert den Implementierungsaufwand erheblich und stellt gleichzeitig eine konsistente Benutzeroberfläche im SAP-Fiori-Designstandard sicher.
+
+Ein weiterer Vorteil ist die durchgängige Integration innerhalb der \gls{btp}. Die Anwendung nutzt Cloud Foundry als Laufzeitumgebung, SAP HANA Cloud als Datenbank, \gls{xsuaa} für die Authentifizierung und \gls{spa} für den Genehmigungsworkflow. Diese Dienste sind über das \gls{btp}-Ökosystem aufeinander abgestimmt, sodass die Konfiguration über Destinations und Service-Bindings standardisiert erfolgen kann.
+
+Darüber hinaus weist die Architektur eine klare Schichtentrennung auf: Das Datenmodell ist in der Datenbankschicht definiert, die Geschäftslogik befindet sich in den Event-Handlern des Service, die Workflow-Kommunikation ist in einer eigenen Client-Klasse gekapselt, und die Oberfläche wird deklarativ über Annotationen gesteuert. Diese Trennung erleichtert die Wartbarkeit und Erweiterbarkeit des Systems.
+
+\paragraph{Herausforderungen}
+
+Während der Implementierung traten mehrere technische Herausforderungen auf, die im Folgenden dokumentiert werden.
+
+Eine Schwierigkeit ergab sich bei der Übergabe von Feldnamen zwischen \gls{cap} und \gls{spa}. Das \gls{cap} verwendet in der Service-Schicht die im CDS-Modell definierten Feldnamen in camelCase-Schreibweise (beispielsweise \texttt{requisitionId}), während \gls{spa} bei der Verarbeitung des Workflow-Kontexts die Feldnamen in Kleinbuchstaben abbildet (beispielsweise \texttt{requisitionid}). Um beide Varianten zuverlässig zu unterstützen, übergibt der \texttt{WorkflowClient} das Feld redundant in beiden Schreibweisen an den Workflow-Kontext.
+
+Eine weitere Herausforderung betraf die regionenübergreifende Destination-Konfiguration. Die \gls{cap}-Anwendung wurde in der Region \texttt{eu10} bereitgestellt, während die \gls{spa}-Instanz in der Region \texttt{ap10} betrieben wird. Die Kommunikation über Regionen hinweg erforderte eine korrekte Konfiguration der OAuth2-Endpunkte und \gls{api}-URLs, da die automatische Destination-Auflösung der \gls{btp} standardmäßig auf dieselbe Region beschränkt ist. Dieses Problem wurde durch die explizite Konfiguration der \gls{spa}-Zugangsdaten über Umgebungsvariablen gelöst.
+
+Schließlich erwies sich die Berechnung abgeleiteter Felder im Zusammenspiel mit dem Draft-Mechanismus als nicht trivial. Da Draft-Entitäten vom \gls{cap} in einer separaten Entwurfstabelle verwaltet werden, müssen berechnete Felder wie \texttt{netAmount} und \texttt{totalAmount} sowohl beim Erstellen und Bearbeiten einzelner Positionen als auch beim Aktivieren des Entwurfs (SAVE-Ereignis) korrekt berechnet werden. Dies erforderte die Implementierung von Berechnungslogik an mehreren Stellen: im \texttt{before}-Handler für \texttt{CREATE}/\texttt{UPDATE} der Items-Entität, im \texttt{after}-Handler für die Gesamtsumme sowie im \texttt{SAVE}-Handler für die abschließende Neuberechnung bei der Draft-Aktivierung.
+
+Eine zusätzliche Herausforderung ergab sich bei der Integration des \texttt{@cap-js/attachments}-Plugins. Das Plugin erwartet im Standardfall einen externen SAP Object Store sowie einen aktiven Malware-Scanner-Dienst. Da der Prototyp keinen Object Store verwendet, musste die Speicherart explizit auf \texttt{db} (HANA-BLOB) konfiguriert werden. Darüber hinaus war es erforderlich, den Malware-Scanner durch eine Mock-Implementierung zu ersetzen, da der produktive Dienst im Subaccount nicht verfügbar war. Beim Deployment des \gls{hdi}-Container-Deployers trat zudem ein Fehler auf, da das Plugin im Kontext des Deployers versuchte, eine \gls{xsuaa}-Authentifizierung zu initialisieren. Dies wurde durch das separate Deployment des generierten Datenbankmoduls (\texttt{gen/db}) behoben.
+
+\paragraph{Limitierungen}
+
+Der vorliegende Prototyp unterliegt einigen Einschränkungen, die bei einer produktiven Nutzung adressiert werden müssten.
+
+Zunächst ist der Prototyp als Einzelmandantenlösung (Single-Tenant) konzipiert und verfügt nicht über die für einen produktiven Betrieb erforderliche Mandantenfähigkeit \citep{kratzke2018cloud}. Eine Erweiterung auf Multi-Tenancy würde den Einsatz des SAP SaaS Provisioning Service und eine Anpassung der Datenbankkonfiguration erfordern.
+
+Des Weiteren ist die Fehlerbehandlung auf die wesentlichen Fehlerfälle beschränkt. Der \texttt{WorkflowClient} implementiert einen Retry-Mechanismus mit exponentiellem Backoff für den Workflow-Start, jedoch fehlt eine umfassende Behandlung von Randfällen wie Netzwerkunterbrechungen während des Callbacks, doppelte Callback-Aufrufe oder Zeitüberschreitungen bei langen Genehmigungszyklen.
+
+Darüber hinaus sieht der Prototyp keine mehrstufigen Genehmigungsregeln vor. In der aktuellen Implementierung wird jede Bestellanforderung unabhängig von ihrem Betrag einem einzelnen Genehmiger zugewiesen. In einer produktiven Umgebung wären betragsabhängige Genehmigungsstufen, Stellvertreterregelungen und Eskalationsmechanismen erforderlich.
+
+Die Statushistorie bietet zwar eine grundlegende Nachvollziehbarkeit der Genehmigungsentscheidungen, deckt jedoch nicht alle Aspekte einer vollständigen Audit-Protokollierung ab. Insbesondere werden Änderungen an den Kopfdaten und Positionen der Bestellanforderung nicht im Detail protokolliert.
+
+Abschließend ist festzuhalten, dass keine automatisierten Tests implementiert wurden. Die Validierung erfolgte ausschließlich über manuelle Funktionstests. Für einen produktiven Einsatz wären Unit-Tests für die Geschäftslogik, Integrationstests für die Workflow-Kommunikation und End-to-End-Tests für die Benutzeroberfläche empfehlenswert.

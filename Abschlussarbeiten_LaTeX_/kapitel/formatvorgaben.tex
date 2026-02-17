@@ -1,0 +1,145 @@
+\section{Formatvorgaben für die Layout-Gestaltung wissenschaftlicher Arbeiten}
+
+Dieses Dokument dient als Formatvorlage für wissenschaftliche Arbeiten und ist bereits mit geeigneten Einstellungen versehen. Änderungen an Formatierungen, Seitenrändern oder anderen Layoutbestandteilen sollten bewusst und konsistent vorgenommen werden. Die folgenden Vorgaben können bei Bedarf angepasst werden.
+
+\textbf{Hinweis:} Es sollten nicht zwei Überschriften direkt untereinanderstehen, ohne dass dazwischen etwas Text kommt. Man könnte hier z. B. kurz in das Kapitel einleiten oder einen
+Überblick der folgenden Inhalte geben.
+
+\subsection{Seitenlayout}
+
+Für wissenschaftliche Arbeiten sind folgende Seitenränder üblich: 3\,cm links, 2\,cm rechts sowie 2\,cm oben und unten. Diese Einstellungen können in LaTeX über das Paket \verb|geometry| gesetzt werden:
+
+\begin{verbatim}
+\usepackage[a4paper, left=3cm, right=2cm, top=2cm, bottom=2cm]{geometry}
+\end{verbatim}
+
+\subsection{Standardtext}
+
+Empfohlene Schriftart ist eine serifenlose oder serifenbetonte, gut lesbare Schrift wie \textsf{Arial} oder \texttt{Computer Modern}. In LaTeX ist standardmäßig eine serifenbetonte Schrift voreingestellt. Die Schriftgröße beträgt in der Regel 11\,pt oder 12\,pt, der Zeilenabstand etwa 1{,}5-zeilig. Den Zeilenabstand kann man z.\,B. mit dem Paket \verb|setspace| steuern:
+
+\begin{verbatim}
+\usepackage{setspace}
+\onehalfspacing
+\end{verbatim}
+
+Text sollte im Blocksatz gesetzt werden – dies ist in LaTeX standardmäßig der Fall.
+
+\subsection{Kopf- und Fußzeilen}
+
+Die Kopf- und Fußzeilen des Dokuments werden mit dem Paket \texttt{scrlayer-scrpage} konfiguriert, das speziell auf die \texttt{KOMA-Script}-Klassen wie \texttt{scrartcl} abgestimmt ist.
+
+\subsection{Fußnoten}
+Fußnoten werden mit \verb|\footnote{...}| gesetzt. Diese werden automatisch nummeriert und im Fußbereich der Seite angezeigt. Eine durchgezogene Trennlinie wird automatisch eingefügt.
+
+\textbf{Beispiel:}
+Das Paket dinat\footnote{\url{https://ctan.org/pkg/dinat?lang=de}} erstellt Bibliographien nach der DIN 1505 Norm. 
+
+\subsection{Abbildungen und Tabellen}
+Abbildungen (dies gilt ebenso für Tabellen) sind in wissenschaftlichen Arbeiten fortlaufend zu nummerieren (z.\,B. Abbildung~1, Abbildung~2 bzw. Tabelle~1, Tabelle~2). Die Beschriftung erfolgt in LaTeX mit dem Befehl \verb|\caption{}| innerhalb der jeweiligen \verb|figure|- oder \verb|table|-Umgebung. Der Titel der Abbildung bzw. Tabelle steht standardmäßig unter der Abbildung und über der Tabelle.
+
+Wenn Tabellen oder Abbildungen aus anderen Quellen übernommen werden, ist ein Quellennachweis erforderlich. Dieser sollte in der Regel als Fußnote direkt am Ende der Beschriftung erfolgen. Bei einer direkten, unveränderten Übernahme lautet die Quellenangabe z.\,B.: 
+\begin{quote}
+\textit{Abbildung/Tabelle entnommen aus: Nachname, Jahreszahl, Seitenzahl.\footnote{
+\citep[S. 50]{nachname2022buch}}}
+\end{quote}
+
+Bei veränderter Übernahme ist der Quellennachweis mit \textit{vgl.} einzuleiten:
+
+\begin{quote}
+\textit{Vgl. Nachname, Jahreszahl, Seitenzahl.\footnote{Vgl. Nachname, Vorname: Titel, Verlag, Jahr, Seitenbereich}}
+\end{quote}
+
+Die vollständige Quellenangabe wird wie üblich im Literaturverzeichnis dargestellt. Sollte es sich bei der Darstellung um eine „Eigenschöpfung“ handeln, ist dies entsprechend kenntlich zu machen. 
+
+\subsubsection{Tabellen}
+Beispiel für eine Tabelle in LaTeX.
+\begin{table}[!h]
+  \begin{center}
+    \caption{Ein Beispiel für eine Tabelle in LaTeX}
+    \label{tab:table1}
+    \begin{tabular}{l|c|r} % <-- Ausrichtung: Erste Splate links, zweite Spalte mitte und dritt Spalte rechts mit vertikalen Linien dazwischen
+      \textbf{Wert 1} & \textbf{Wert 2} & \textbf{Wert 3}\\
+      \hline
+      \hline
+      $\alpha$ & $\beta$ & $\gamma$ \\
+      \hline
+      1 & 123.1 & a\\
+      2 & 1.1 & b\\
+      3 & 1001.1001 & c\\
+    \end{tabular}
+  \end{center}
+\end{table}
+
+\subsubsection{Abbildungen}
+In Abbildung \ref{fig:hsbi_logo} wird das Logo der HSBI dargestellt. 
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.7\textwidth]{abbildungen/HSBI Logo mit Text.jpg}
+    \caption{Beispiel für eine Abbildung mit dem HSBI Logo}
+    \label{fig:hsbi_logo}
+\end{figure}
+
+\subsection{Algorithmen (Code Auflistung)}
+Programmcode und andere technische Inhalte sollten im Fließtext nicht als Screenshots, sondern in Textform eingebunden werden. Für Quellcode-Darstellungen bieten sich z.\,B. die Pakete \verb|listings| oder \verb|pythonhighlight| an.
+
+Zwei Beispiele für Darstellung von Code in LaTeX. 
+\begin{lstlisting}[style=mystyle, caption={Default Style},label={lst:lst1},captionpos=b]
+    def my_function():
+      print("Hello from a function")
+    
+    my_function()
+\end{lstlisting}
+\begin{python}[caption={Python Style},label={lst:lst2}, captionpos=b]
+def my_function():
+  print("Hello from a function")
+
+my_function()
+\end{python}
+
+\subsection{Andere Beispiele}
+Hier sind noch einige andere wichtige Hinweise
+
+\subsubsection{Aufzählungen}
+\paragraph{Nicht-numeriert}
+\begin{itemize}
+\item Punkt 1
+\item Punkt 2
+	\begin{itemize}
+	\item Punkt 1
+	\item Punkt 2
+	\end{itemize}
+\end{itemize}
+\paragraph{Numeriert}
+\begin{enumerate}
+\item Punkt 1
+\item Punkt 2
+\end{enumerate}
+
+\subsubsection{Mathematischen Formeln mit Quellenangabe}
+Im Folgenden wird ein Beispiel für mathematischen Formeln in LaTeX dargestellt.
+\begin{equation}
+\label{eq:idf}
+		idf_{t} = log \dfrac{N}{df_{t}} 
+\end{equation}
+\citep[S. 118]{manning2008}
+
+\subsection{Zitierregeln}
+
+Jede Verwendung fremden geistigen Eigentums ist durch eine genaue Quellenangabe zu kennzeichnen, da andernfalls Plagiatsvorwürfe folgen. Direkt oder indirekt übernommene Gedanken sind als solche kenntlich zu machen. Jedes Zitat muss überprüfbar sein.
+
+In dieser Vorlage werden zwei verschiedene Zitierstile zu Demonstrationszwecken dargestellt:
+
+\begin{enumerate}
+  \item Der \textbf{internationale Zitationsstil} nach dem Autor-Jahr-Prinzip (z.\,B. APA-Stil), umgesetzt mit dem Paket \texttt{natbib}. Dabei erfolgt die Quellenangabe direkt im Fließtext, z.\,B. \textit{(Manning et al., 2008, S. 118)}.
+  
+  \item Die \textbf{deutsche Zitierweise}, bei der Quellenangaben vollständig in Fußnoten erfolgen. Diese Variante ist in dieser Vorlage manuell umgesetzt. Ein Beispiel%
+  \footnote{vgl. Nachname, Vorname, Jahr, Seitenbereich}
+\end{enumerate}
+
+Beide Varianten dienen ausschließlich der Veranschaulichung und können je nach Anforderungen durchgängig verwendet oder angepasst werden.
+
+Im Literaturverzeichnis werden werden nur die Quellen aufgelistet, die nach der internationalen Zitierweise zitiert wurden.
+
+\textbf{Wichtig!} Diese Vorlage zeigt keine einheitliche Zitierweise, sondern nur einige Beispiele. Nach der Auswahl der für Sie passenden Zitierweise muss die Vorlage entsprechend bearbeitet werden, damit die gewählte Zitierweise korrekt dargestellt wird. In der ILIAS-Schreibwerkstatt des Fachbereichs Wirtschaft finden Sie Handreichungen für den deutschen Zitierstil mit Fußnoten und für Zitation gemäß APA.
+
+\textbf{Hinwies:} Bezüglich der Zitierregeln richten Sie sich bitte nach den Vorgaben in Ihrem jeweiligen Studiengang. Erkundigen Sie sich bitte auch bei Ihrer betreuenden Professorin bzw. Ihrem betreuenden Professor, welcher Zitierstil bei der Erstellung der Bachelorarbeit zu verwenden ist.
