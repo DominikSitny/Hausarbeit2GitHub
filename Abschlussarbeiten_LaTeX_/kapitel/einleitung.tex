@@ -1,6 +1,6 @@
 \section{Einleitung}
 
-Unternehmen stehen zunehmend vor der Herausforderung, ihre internen Geschäftsprozesse zu digitalisieren und zu automatisieren, um wettbewerbsfähig zu bleiben. Ein zentraler Bestandteil betrieblicher Abläufe ist der Beschaffungsprozess, insbesondere die Bestellanforderung und deren Genehmigung. Die vorliegende Hausarbeit befasst sich mit der Konzeption und prototypischen Implementierung eines solchen Bestellanforderungsprozesses mit integriertem Genehmigungsworkflow auf der \gls{btp}.
+Unternehmen stehen zunehmend vor der Herausforderung, ihre internen Geschäftsprozesse zu digitalisieren und zu automatisieren, um wettbewerbsfähig zu bleiben. Ein vielversprechender Ansatz hierfür ist die ereignisgesteuerte Prozessautomatisierung, bei der Geschäftsprozesse durch definierte Ereignisse automatisch ausgelöst und orchestriert werden. Die vorliegende Hausarbeit befasst sich mit der Konzeption, Implementierung und Evaluation einer solchen ereignisgesteuerten Workflow-Integration auf der \gls{btp}, wobei ein Bestellanforderungsprozess mit Genehmigungsworkflow als konkreter Anwendungsfall dient.
 
 \subsection{Motivation und Problemstellung}
 
@@ -12,18 +12,11 @@ Vor dem Hintergrund der digitalen Transformation gewinnen integrierte Plattforml
 
 \subsection{Zielsetzung}
 
-Ziel dieser Arbeit ist es, einen Prototyp für einen Bestellanforderungsprozess mit integriertem Genehmigungsworkflow auf der \gls{btp} zu konzipieren und zu implementieren. Dabei steht die folgende Forschungsfrage im Mittelpunkt: \textit{Wie lässt sich durch die Kombination von \gls{cap}, SAP Fiori Elements und \gls{spa} ein durchgängiger, cloudnativer Bestellanforderungsprozess mit Genehmigungsworkflow auf der \gls{btp} realisieren?} Die Anwendung soll es Mitarbeitenden ermöglichen, Bestellanforderungen über eine webbasierte Benutzeroberfläche zu erstellen, die anschließend automatisiert einem definierten Genehmigungsprozess zugeführt werden.
+Ziel dieser Arbeit ist es, eine ereignisgesteuerte Workflow-Integration auf der \gls{btp} zu konzipieren, zu implementieren und zu evaluieren. Dabei steht die folgende Forschungsfrage im Mittelpunkt: \textit{Wie lässt sich durch die Kombination von \gls{cap} und \gls{spa} eine ereignisgesteuerte Prozessautomatisierung auf der \gls{btp} realisieren, bei der Geschäftsereignisse automatisch Workflows auslösen und deren Ergebnisse bidirektional zurückgemeldet werden?} Als konkreter Anwendungsfall dient ein Bestellanforderungsprozess, bei dem die Freigabe einer Anforderung automatisch einen Genehmigungsworkflow startet.
 
 Für die technische Umsetzung wird das \gls{cap} mit Node.js als serverseitiges Programmiermodell verwendet \citep{sap2024cap}. Die Benutzeroberfläche wird auf Basis von SAP Fiori Elements generiert, um eine konsistente und standardkonforme Benutzererfahrung zu gewährleisten. Die Genehmigungslogik wird mithilfe von \gls{spa} als Workflow realisiert, sodass Genehmigungsschritte automatisiert ausgelöst und nachverfolgt werden können. Als Datenbank kommt SAP HANA Cloud zum Einsatz, und die Bereitstellung der Gesamtanwendung erfolgt über Cloud Foundry auf der \gls{btp}.
 
-Im Einzelnen verfolgt die Arbeit die folgenden Teilziele:
-
-\begin{itemize}
-    \item Analyse der fachlichen Anforderungen an einen Bestellanforderungsprozess mit Genehmigungsworkflow,
-    \item Konzeption einer geeigneten Anwendungsarchitektur unter Verwendung der genannten SAP-Technologien,
-    \item Prototypische Implementierung der Anwendung einschließlich Datenmodell, Geschäftslogik, Benutzeroberfläche und Workflow,
-    \item Bereitstellung der Anwendung auf der \gls{btp} und Evaluation des Ergebnisses.
-\end{itemize}
+Im Einzelnen verfolgt die Arbeit vier Teilziele: Erstens die Analyse der fachlichen Anforderungen an eine ereignisgesteuerte Workflow-Integration, zweitens die Konzeption einer geeigneten Anwendungsarchitektur unter Verwendung des \gls{cap} und \gls{spa}, drittens die prototypische Implementierung einschließlich Datenmodell, Geschäftslogik, Benutzeroberfläche und bidirektionaler Workflow-Anbindung sowie viertens die Evaluation der realisierten Lösung hinsichtlich der definierten Anforderungen.
 
 \subsection{Aufbau der Arbeit}
 

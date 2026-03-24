@@ -70,17 +70,7 @@ Die Datenbankschicht bildet das Fundament der Anwendung und ist für die persist
 
 \subsubsection{Service-Schicht}
 
-Die Service-Schicht stellt den zentralen Verarbeitungskern der Anwendung dar. Sie wird als \gls{cap}-Anwendung auf Basis von Node.js implementiert und exponiert die Geschäftslogik als \gls{odata}-V4-Service. Die wesentlichen Aufgaben der Service-Schicht umfassen:
-
-\begin{itemize}
-  \item Die Bereitstellung von \gls{crud}-Operationen für Bestellanforderungen und deren Positionen,
-  \item die automatische Berechnung von Nettobeträgen und Gesamtbeträgen,
-  \item die Validierung der Eingabedaten bei der Freigabe einer Bestellanforderung,
-  \item den Start des Genehmigungsworkflows in \gls{spa} über die \gls{api}-Schnittstelle und
-  \item die Verarbeitung des Callback-Aufrufs nach Abschluss des Genehmigungsprozesses.
-\end{itemize}
-
-Die Anbindung an \gls{spa} erfolgt über einen dedizierten Workflow-Client, der den OAuth2 Client Credentials Flow zur Authentifizierung nutzt und die Kommunikation mit der \gls{spa}-\gls{api} kapselt.
+Die Service-Schicht stellt den zentralen Verarbeitungskern der Anwendung dar. Sie wird als \gls{cap}-Anwendung auf Basis von Node.js implementiert und exponiert die Geschäftslogik als \gls{odata}-V4-Service. Die wesentlichen Aufgaben der Service-Schicht umfassen die Bereitstellung von \gls{crud}-Operationen für Bestellanforderungen und deren Positionen, die automatische Berechnung von Nettobeträgen und Gesamtbeträgen, die Validierung der Eingabedaten bei der Freigabe einer Bestellanforderung, den Start des Genehmigungsworkflows in \gls{spa} über die \gls{api}-Schnittstelle sowie die Verarbeitung des Callback-Aufrufs nach Abschluss des Genehmigungsprozesses. Die Anbindung an \gls{spa} erfolgt über einen dedizierten Workflow-Client, der den OAuth2 Client Credentials Flow zur Authentifizierung nutzt und die Kommunikation mit der \gls{spa}-\gls{api} kapselt.
 
 \subsubsection{Präsentationsschicht}
 
@@ -168,15 +158,7 @@ Darüber hinaus unterstützt der Prozess die erneute Bearbeitung nach einer Gene
 
 \subsubsection{Workflow-Design in SAP Build Process Automation}
 
-Der in \gls{spa} modellierte Genehmigungsprozess folgt einer linearen Struktur und besteht aus den folgenden Schritten:
-
-\begin{enumerate}
-  \item \textbf{\gls{api}-Trigger:} Der Prozess wird durch einen \gls{api}-Aufruf aus der \gls{cap}-Anwendung gestartet. Der Kontextparameter enthält die Bestellanforderungs-ID, die Beschreibung, den Anforderer, die Kostenstelle, den Gesamtbetrag, die einzelnen Positionen als strukturierte Liste, die Metadaten der Anhänge (Dateiname, MIME-Typ und direkte Download-URL) sowie einen Deep Link zur Fiori-Object-Page der Bestellanforderung.
-  \item \textbf{Genehmigungsformular:} Eine Benutzeraufgabe wird erstellt und dem Genehmiger in der My Inbox zugewiesen. Das Formular zeigt die übermittelten Kontextdaten einschließlich der Positionsliste und der Anhänge an und bietet die Optionen \glqq Genehmigen\grqq{} und \glqq Ablehnen\grqq{}. Über den Deep Link kann der Genehmiger direkt zur Detailansicht der Bestellanforderung in der Fiori-Anwendung navigieren.
-  \item \textbf{Bedingung:} Basierend auf der Entscheidung des Genehmigers wird der Prozessfluss verzweigt.
-  \item \textbf{Callback-Aktion:} Unabhängig von der Entscheidung wird ein HTTP-Aufruf an den Callback-Endpunkt der \gls{cap}-Anwendung ausgeführt, der die Workflow-ID, den Entscheidungsstatus, den Namen des Genehmigers, einen optionalen Kommentar sowie den Zeitpunkt der Entscheidung übermittelt.
-  \item \textbf{Prozessende:} Der Workflow wird abgeschlossen.
-\end{enumerate}
+Der in \gls{spa} modellierte Genehmigungsprozess folgt einer linearen Struktur. Zunächst wird der Prozess durch einen \gls{api}-Aufruf aus der \gls{cap}-Anwendung gestartet, wobei der Kontextparameter die Bestellanforderungs-ID, die Beschreibung, den Anforderer, die Kostenstelle, den Gesamtbetrag, die einzelnen Positionen, die Metadaten der Anhänge sowie einen Deep Link zur Fiori-Anwendung enthält. Anschließend wird eine Benutzeraufgabe erstellt und dem Genehmiger in der My Inbox zugewiesen, wo das Formular die Kontextdaten anzeigt und die Optionen \glqq Genehmigen\grqq{} und \glqq Ablehnen\grqq{} bietet. Basierend auf der Entscheidung wird der Prozessfluss verzweigt. Unabhängig von der Entscheidung wird ein HTTP-Aufruf an den Callback-Endpunkt der \gls{cap}-Anwendung ausgeführt, der die Workflow-ID, den Entscheidungsstatus, den Namen des Genehmigers und einen optionalen Kommentar übermittelt. Abschließend wird der Workflow beendet.
 
 \subsection{Sicherheitskonzept}
 \label{subsec:sicherheitskonzept}
@@ -185,12 +167,7 @@ Das Sicherheitskonzept der Anwendung adressiert die Authentifizierung, die Autor
 
 \subsubsection{Authentifizierung und Autorisierung}
 
-Die Authentifizierung der Benutzer erfolgt über den \gls{xsuaa}-Service der \gls{btp} \citep{sap2024xsuaa}. Dieser fungiert als OAuth2-Autorisierungsserver und stellt \gls{jwt}-basierte Zugriffstoken aus, die bei jedem Zugriff auf die \gls{cap}-Anwendung validiert werden. Die Autorisierung basiert auf einem rollenbasierten Zugriffsmodell, in dem zwei Rollen definiert sind:
-
-\begin{itemize}
-  \item \textbf{Requester:} Berechtigt zum Erstellen, Bearbeiten und Einreichen von Bestellanforderungen.
-  \item \textbf{Approver:} Berechtigt zum Genehmigen oder Ablehnen von Bestellanforderungen in der My Inbox von \gls{spa}.
-\end{itemize}
+Die Authentifizierung der Benutzer erfolgt über den \gls{xsuaa}-Service der \gls{btp} \citep{sap2024xsuaa}. Dieser fungiert als OAuth2-Autorisierungsserver und stellt \gls{jwt}-basierte Zugriffstoken aus, die bei jedem Zugriff auf die \gls{cap}-Anwendung validiert werden. Die Autorisierung basiert auf einem rollenbasierten Zugriffsmodell mit zwei Rollen: Die Rolle \textit{Requester} berechtigt zum Erstellen, Bearbeiten und Einreichen von Bestellanforderungen, während die Rolle \textit{Approver} zum Genehmigen oder Ablehnen von Bestellanforderungen in der My Inbox von \gls{spa} berechtigt.
 
 \subsubsection{Service-zu-Service-Kommunikation}
 
