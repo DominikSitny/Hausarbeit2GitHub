@@ -1,16 +1,21 @@
 \section{Ergebnisse und Evaluation}
 
-Dieses Kapitel stellt die Ergebnisse der prototypischen Implementierung vor und bewertet diese anhand der definierten Anforderungen.
+Dieses Kapitel stellt die Ergebnisse der prototypischen Implementierung vor und bewertet diese anhand der definierten funktionalen und nicht-funktionalen Anforderungen.
 
 \subsection{Funktionstest}
 
 Zur Validierung wurde ein manueller Funktionstest durchgeführt, der den vollständigen Prozess von der Anlage einer Bestellanforderung bis zum Abschluss des Genehmigungsworkflows abdeckt.
 
-Der \textbf{Genehmigungspfad} umfasst: Anlegen einer Bestellanforderung im Status \texttt{Draft}, Erfassen von Kopfdaten und Positionen, automatische Betragsberechnung beim Speichern, Freigabe über die \textit{Freigeben}-Aktion, Start des Workflows in \gls{spa}, Genehmigung in der My Inbox und Statusaktualisierung auf \texttt{Approved} über den Callback.
+Der \textbf{Genehmigungspfad} umfasst folgende Schritte: Anlegen einer Bestellanforderung im Status \texttt{Draft}, Erfassen von Kopfdaten und Positionen, automatische Betragsberechnung beim Speichern, Freigabe über die \textit{Freigeben}-Aktion, Start des Workflows in \gls{spa}, Genehmigung in der My Inbox (siehe Abbildung~\ref{fig:myinbox}) und Statusaktualisierung auf \texttt{Approved} über den Callback. Der \textbf{Ablehnungspfad} verläuft analog, wobei der Status auf \texttt{Rejected} gesetzt wird und eine erneute Bearbeitung und Einreichung möglich ist.
 
-Der \textbf{Ablehnungspfad} verläuft analog, wobei der Status auf \texttt{Rejected} gesetzt wird und eine erneute Bearbeitung und Einreichung möglich ist.
+\begin{figure}[H]
+  \centering
+  \fbox{\parbox{0.9\textwidth}{\centering\vspace{2.5cm}\textbf{PLATZHALTER: Screenshot My Inbox}\\\textit{(myinbox.png)}\vspace{2.5cm}}}
+  \caption{Genehmigungsaufgabe in der SAP Build Process Automation My Inbox}
+  \label{fig:myinbox}
+\end{figure}
 
-Tabelle~\ref{tab:testfaelle} fasst die Testfälle zusammen.
+Tabelle~\ref{tab:testfaelle} fasst die durchgeführten Testfälle zusammen. Alle zehn Testfälle wurden erfolgreich bestanden, was die korrekte Implementierung der funktionalen Anforderungen bestätigt.
 
 \begin{table}[H]
 \centering
@@ -36,15 +41,30 @@ T10 & Wiederbearbeitung nach Entscheidung & Bestanden \\
 
 \subsection{Anforderungsabgleich}
 
-Alle elf funktionalen Anforderungen aus Kapitel~3 wurden vollständig umgesetzt: \gls{crud}-Operationen (FA1), Positionserfassung mit Betragsberechnung (FA2, FA3), Statusverwaltung (FA4), Freigabeprozess mit Validierung (FA5), Workflow-Integration (FA6, FA7), Draft-Unterstützung (FA8), Statushistorie (FA9), Dokumentenanhänge (FA10) und Wiederbearbeitbarkeit (FA11).
+\subsubsection{Funktionale Anforderungen}
+
+Alle elf funktionalen Anforderungen aus Kapitel~3 wurden vollständig umgesetzt. Die \gls{crud}-Operationen (FA1) werden durch das \gls{cap}-Framework automatisch bereitgestellt. Die Positionserfassung mit Betragsberechnung (FA2, FA3) erfolgt über Event-Handler, die bei jedem Speichervorgang die Nettobeträge der Positionen und den Gesamtbetrag der Anforderung aktualisieren. Die Statusverwaltung (FA4) und der Freigabeprozess mit Validierung (FA5) sind als gebundene Aktion implementiert, die vor dem Workflow-Start prüft, ob mindestens eine Position vorhanden ist.
+
+Die Workflow-Integration (FA6, FA7) bildet den Kern der ereignisgesteuerten Architektur. Der \gls{api}-Trigger startet den Prozess in \gls{spa}, und der Callback-Endpunkt verarbeitet die Genehmigungsentscheidung. Die Draft-Unterstützung (FA8) wird durch die native \gls{cap}-Funktionalität realisiert. Die Statushistorie (FA9) protokolliert jeden Statuswechsel mit Zeitstempel, Quelle und optionalem Kommentar. Die Dokumentenanhänge (FA10) nutzen das offizielle \texttt{@cap-js/attachments}-Plugin. Die Wiederbearbeitbarkeit (FA11) setzt den Status beim Speichern einer bereits entschiedenen Anforderung automatisch auf \texttt{Draft} zurück.
+
+\subsubsection{Nicht-funktionale Anforderungen}
+
+Die nicht-funktionalen Anforderungen wurden ebenfalls erfüllt. Die Anwendung ist cloud-nativ auf der \gls{btp} bereitgestellt und nutzt die \gls{cf}-Laufzeitumgebung (NFA1). Die Authentifizierung und Autorisierung erfolgt über den \gls{xsuaa}-Service mit rollenbasierter Zugriffskontrolle (NFA2). Die Fiori-Elements-Oberfläche ist responsiv und passt sich automatisch an verschiedene Bildschirmgrößen an (NFA3). Die Kommunikation zwischen den Komponenten erfolgt ausschließlich über standardisierte \gls{odata}-V4- und \gls{rest}-Schnittstellen (NFA4).
 
 \subsection{Bewertung}
 
-\paragraph{Stärken}
-Die Kombination von \gls{cap} und Fiori Elements ermöglicht eine hohe Entwicklungsgeschwindigkeit durch deklarative Modellierung. Die Benutzeroberfläche wird vollständig annotationsgesteuert generiert, ohne manuellen Frontend-Code. Die durchgängige Integration innerhalb der \gls{btp} und die klare Schichtentrennung fördern Wartbarkeit und Erweiterbarkeit.
+\subsubsection{Stärken der Lösung}
 
-\paragraph{Herausforderungen}
-Technische Herausforderungen umfassten die Feldnamen-Konvertierung zwischen \gls{cap} und \gls{spa}, die regionenübergreifende Destination-Konfiguration sowie die Betragsberechnung im Zusammenspiel mit dem Draft-Mechanismus.
+Die Kombination von \gls{cap} und Fiori Elements ermöglicht eine hohe Entwicklungsgeschwindigkeit durch deklarative Modellierung. Das Domänenmodell und die Servicedefinition werden in wenigen \gls{cds}-Dateien beschrieben, woraus das Framework automatisch Datenbankartefakte, \gls{odata}-Schnittstellen und eine vollständige Benutzeroberfläche generiert. Dies reduziert den Implementierungsaufwand erheblich und minimiert potenzielle Fehlerquellen durch manuellen Code.
 
-\paragraph{Limitierungen}
-Der Prototyp ist als Einzelmandantenlösung konzipiert, verfügt über keine mehrstufigen Genehmigungsregeln und keine automatisierten Tests. Für einen produktiven Einsatz wären diese Erweiterungen erforderlich.
+Die ereignisgesteuerte Integration mit \gls{spa} gewährleistet eine klare Trennung der Verantwortlichkeiten. Die \gls{cap}-Anwendung ist für die Datenhaltung zuständig, während \gls{spa} die Prozesslogik orchestriert. Diese lose Kopplung erleichtert die unabhängige Weiterentwicklung beider Komponenten und ermöglicht die Wiederverwendung des Workflows für andere Anwendungsfälle.
+
+Die durchgängige Integration innerhalb der \gls{btp} vereinfacht die Authentifizierung und den sicheren Datenaustausch zwischen den Diensten. Die Verwendung von BTP-Destinations für die Service-Konfiguration ermöglicht eine flexible Anpassung an verschiedene Umgebungen ohne Code-Änderungen.
+
+\subsubsection{Technische Herausforderungen}
+
+Während der Implementierung traten mehrere technische Herausforderungen auf. Die Feldnamen-Konvertierung zwischen \gls{cap} und \gls{spa} erforderte besondere Aufmerksamkeit, da \gls{cap} standardmäßig camelCase verwendet, während \gls{spa} teilweise andere Konventionen erwartet. Die regionenübergreifende Destination-Konfiguration stellte eine weitere Hürde dar, da \gls{spa} und die \gls{cap}-Anwendung in unterschiedlichen BTP-Regionen betrieben werden können. Schließlich erforderte die Betragsberechnung im Zusammenspiel mit dem Draft-Mechanismus eine sorgfältige Implementierung der Event-Handler, um Inkonsistenzen zu vermeiden.
+
+\subsubsection{Limitierungen und Erweiterungspotenzial}
+
+Der Prototyp weist einige Limitierungen auf, die für einen produktiven Einsatz adressiert werden müssten. Die Anwendung ist als Einzelmandantenlösung konzipiert und unterstützt keine mandantenspezifische Datentrennung. Der Genehmigungsprozess ist einstufig; mehrstufige Genehmigungsregeln in Abhängigkeit vom Bestellwert oder der Kostenstelle sind nicht implementiert. Automatisierte Tests fehlen, sodass die Qualitätssicherung derzeit auf manuellen Tests basiert. Darüber hinaus erfolgt keine E-Mail-Benachrichtigung bei ausstehenden Genehmigungsaufgaben.

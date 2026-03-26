@@ -62,7 +62,49 @@ Neben den funktionalen Anforderungen wurden nicht-funktionale Anforderungen defi
 \subsection{Architekturentwurf}
 \label{subsec:architekturentwurf}
 
-Der Architekturentwurf orientiert sich an einer klassischen Dreischichtarchitektur, die in eine Datenbank-, eine Service- und eine Präsentationsschicht untergliedert ist. Diese Schichtung ermöglicht eine klare Trennung der Verantwortlichkeiten und erleichtert sowohl die Wartbarkeit als auch die Erweiterbarkeit des Systems. Im Folgenden werden die einzelnen Schichten und ihre Verantwortlichkeiten erläutert.
+Der Architekturentwurf orientiert sich an einer klassischen Dreischichtarchitektur, die in eine Datenbank-, eine Service- und eine Präsentationsschicht untergliedert ist. Diese Schichtung ermöglicht eine klare Trennung der Verantwortlichkeiten und erleichtert sowohl die Wartbarkeit als auch die Erweiterbarkeit des Systems. Abbildung~\ref{fig:architektur} zeigt die Gesamtarchitektur der Lösung einschließlich der Integration mit \gls{spa}.
+
+\begin{figure}[H]
+  \centering
+  \begin{tikzpicture}[
+    box/.style={rectangle, draw, minimum width=2.8cm, minimum height=1cm, align=center, font=\small},
+    layer/.style={rectangle, draw, dashed, inner sep=8pt},
+    arrow/.style={-{Stealth}, thick},
+    node distance=0.8cm
+  ]
+    % CAP Application Layers
+    \node[box, fill=blue!15] (ui) {Fiori Elements\\(List Report, Object Page)};
+    \node[box, fill=green!15, below=of ui] (srv) {CAP Service\\(Node.js, OData V4)};
+    \node[box, fill=orange!15, below=of srv] (db) {SAP HANA Cloud\\(HDI Container)};
+
+    % Layer labels
+    \node[left=0.3cm of ui, font=\scriptsize\itshape] {Präsentation};
+    \node[left=0.3cm of srv, font=\scriptsize\itshape] {Service};
+    \node[left=0.3cm of db, font=\scriptsize\itshape] {Datenbank};
+
+    % SPA
+    \node[box, fill=purple!15, right=2.5cm of srv] (spa) {SAP Build\\Process Automation};
+    \node[box, fill=purple!10, below=0.5cm of spa] (inbox) {My Inbox};
+
+    % Arrows within CAP
+    \draw[arrow, <->] (ui) -- (srv);
+    \draw[arrow, <->] (srv) -- (db);
+
+    % Arrows to SPA
+    \draw[arrow] (srv.east) -- node[above, font=\scriptsize] {API-Trigger} (spa.west);
+    \draw[arrow] (spa.west) -- +(-0.5,0) |- node[below, font=\scriptsize, pos=0.25] {Callback} ([yshift=-3mm]srv.east);
+
+    % Background boxes
+    \begin{scope}[on background layer]
+      \node[layer, fill=gray!5, fit=(ui)(srv)(db), label={[font=\small\bfseries]above:CAP-Anwendung}] {};
+      \node[layer, fill=purple!5, fit=(spa)(inbox), label={[font=\small\bfseries]above:Workflow}] {};
+    \end{scope}
+  \end{tikzpicture}
+  \caption{Architektur der Bestellanforderungsanwendung mit Workflow-Integration}
+  \label{fig:architektur}
+\end{figure}
+
+Im Folgenden werden die einzelnen Schichten und ihre Verantwortlichkeiten erläutert.
 
 \subsubsection{Datenbankschicht}
 
@@ -158,7 +200,52 @@ Darüber hinaus unterstützt der Prozess die erneute Bearbeitung nach einer Gene
 
 \subsubsection{Workflow-Design in SAP Build Process Automation}
 
-Der in \gls{spa} modellierte Genehmigungsprozess folgt einer linearen Struktur. Zunächst wird der Prozess durch einen \gls{api}-Aufruf aus der \gls{cap}-Anwendung gestartet, wobei der Kontextparameter die Bestellanforderungs-ID, die Beschreibung, den Anforderer, die Kostenstelle, den Gesamtbetrag, die einzelnen Positionen, die Metadaten der Anhänge sowie einen Deep Link zur Fiori-Anwendung enthält. Anschließend wird eine Benutzeraufgabe erstellt und dem Genehmiger in der My Inbox zugewiesen, wo das Formular die Kontextdaten anzeigt und die Optionen \glqq Genehmigen\grqq{} und \glqq Ablehnen\grqq{} bietet. Basierend auf der Entscheidung wird der Prozessfluss verzweigt. Unabhängig von der Entscheidung wird ein HTTP-Aufruf an den Callback-Endpunkt der \gls{cap}-Anwendung ausgeführt, der die Workflow-ID, den Entscheidungsstatus, den Namen des Genehmigers und einen optionalen Kommentar übermittelt. Abschließend wird der Workflow beendet.
+Abbildung~\ref{fig:workflow} zeigt den in \gls{spa} modellierten Genehmigungsprozess als Flussdiagramm.
+
+\begin{figure}[H]
+  \centering
+  \begin{tikzpicture}[
+    startstop/.style={circle, draw, fill=green!20, minimum size=0.8cm},
+    process/.style={rectangle, draw, fill=blue!15, minimum width=3cm, minimum height=0.8cm, align=center, font=\small},
+    decision/.style={diamond, draw, fill=yellow!20, minimum width=2cm, minimum height=1.5cm, align=center, font=\small, aspect=2},
+    arrow/.style={-{Stealth}, thick},
+    node distance=1.2cm
+  ]
+    % Start
+    \node[startstop] (start) {};
+    \node[left=0.2cm of start, font=\scriptsize] {Start};
+
+    % API Trigger
+    \node[process, below=of start] (trigger) {API-Trigger\\(Workflow starten)};
+
+    % User Task
+    \node[process, below=of trigger] (task) {Benutzeraufgabe\\(Genehmigungsformular)};
+
+    % Decision
+    \node[decision, below=1.5cm of task] (decision) {Entscheidung?};
+
+    % Callback nodes
+    \node[process, below left=1.2cm and 0.8cm of decision] (approved) {Callback:\\Status = Approved};
+    \node[process, below right=1.2cm and 0.8cm of decision] (rejected) {Callback:\\Status = Rejected};
+
+    % End
+    \node[startstop, below=2.5cm of decision, fill=red!20] (end) {};
+    \node[left=0.2cm of end, font=\scriptsize] {Ende};
+
+    % Arrows
+    \draw[arrow] (start) -- (trigger);
+    \draw[arrow] (trigger) -- (task);
+    \draw[arrow] (task) -- (decision);
+    \draw[arrow] (decision) -| node[above, font=\scriptsize, pos=0.25] {Genehmigen} (approved);
+    \draw[arrow] (decision) -| node[above, font=\scriptsize, pos=0.25] {Ablehnen} (rejected);
+    \draw[arrow] (approved) |- (end);
+    \draw[arrow] (rejected) |- (end);
+  \end{tikzpicture}
+  \caption{Genehmigungsworkflow in SAP Build Process Automation}
+  \label{fig:workflow}
+\end{figure}
+
+Der Prozess folgt einer linearen Struktur. Zunächst wird der Prozess durch einen \gls{api}-Aufruf aus der \gls{cap}-Anwendung gestartet, wobei der Kontextparameter die Bestellanforderungs-ID, die Beschreibung, den Anforderer, die Kostenstelle, den Gesamtbetrag, die einzelnen Positionen, die Metadaten der Anhänge sowie einen Deep Link zur Fiori-Anwendung enthält. Anschließend wird eine Benutzeraufgabe erstellt und dem Genehmiger in der My Inbox zugewiesen, wo das Formular die Kontextdaten anzeigt und die Optionen \glqq Genehmigen\grqq{} und \glqq Ablehnen\grqq{} bietet. Basierend auf der Entscheidung wird der Prozessfluss verzweigt. Unabhängig von der Entscheidung wird ein HTTP-Aufruf an den Callback-Endpunkt der \gls{cap}-Anwendung ausgeführt, der die Workflow-ID, den Entscheidungsstatus, den Namen des Genehmigers und einen optionalen Kommentar übermittelt. Abschließend wird der Workflow beendet.
 
 \subsection{Sicherheitskonzept}
 \label{subsec:sicherheitskonzept}

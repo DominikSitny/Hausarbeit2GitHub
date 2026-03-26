@@ -1,7 +1,14 @@
 \section{Grundlagen}
 \label{sec:grundlagen}
 
-Dieses Kapitel erläutert die technologischen Grundlagen der Lösung: die \gls{btp} als übergeordnete Plattform, das \gls{cap} für die Anwendungsentwicklung, SAP Fiori Elements für die Benutzeroberfläche sowie \gls{spa} für die Workflow-Automatisierung.
+Dieses Kapitel erläutert die technologischen Grundlagen der Lösung. Zunächst wird das Konzept der ereignisgesteuerten Architektur eingeführt, bevor die eingesetzten SAP-Technologien vorgestellt werden.
+
+\subsection{Ereignisgesteuerte Architektur}
+\label{subsec:eda}
+
+Eine ereignisgesteuerte Architektur (Event-Driven Architecture, EDA) ist ein Softwarearchitekturmuster, bei dem die Kommunikation zwischen Systemkomponenten über Ereignisse erfolgt \citep{newman2021microservices}. Ein Ereignis repräsentiert eine signifikante Zustandsänderung im System, beispielsweise das Anlegen eines Datensatzes oder das Abschließen einer Benutzeraktion. Im Gegensatz zu synchronen Request-Response-Mustern ermöglicht die ereignisgesteuerte Kommunikation eine lose Kopplung zwischen Produzenten und Konsumenten von Ereignissen.
+
+Im Kontext dieser Arbeit wird das Muster für die Integration zwischen der \gls{cap}-Anwendung und \gls{spa} eingesetzt. Die Freigabe einer Bestellanforderung stellt ein Geschäftsereignis dar, das einen Genehmigungsworkflow auslöst. Die Entscheidung des Genehmigers wird als Callback-Ereignis an die Ursprungsanwendung zurückgemeldet. Diese bidirektionale, ereignisgesteuerte Kommunikation ermöglicht eine klare Trennung der Verantwortlichkeiten: Die \gls{cap}-Anwendung verwaltet die Geschäftsdaten, während \gls{spa} die Prozesslogik orchestriert.
 
 \subsection{SAP Business Technology Platform}
 \label{subsec:btp}

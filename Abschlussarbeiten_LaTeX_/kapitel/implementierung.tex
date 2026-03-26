@@ -1,6 +1,6 @@
 \section{Implementierung}
 
-Dieses Kapitel beschreibt die technische Umsetzung des Bestellanforderungsprozesses. Die Implementierung erfolgt auf Basis des \gls{cap} mit Node.js, SAP Fiori Elements und \gls{spa}. Vollständige Code-Listings befinden sich im Anhang.
+Dieses Kapitel beschreibt die technische Umsetzung des Bestellanforderungsprozesses. Die Implementierung erfolgt auf Basis des \gls{cap} mit Node.js, SAP Fiori Elements und \gls{spa}.
 
 \subsection{Projektstruktur}
 
@@ -8,24 +8,94 @@ Die Anwendung folgt der \gls{cap}-Konvention mit drei Hauptverzeichnissen: \text
 
 \subsection{Datenbankschicht}
 
-Das Domänenmodell definiert zwei Hauptentitäten in \gls{cds} (siehe Anhang~A). Die Entität \texttt{PurchaseRequisitions} repräsentiert Bestellanforderungen mit Beschreibung, Anforderer, Kostenstelle, Gesamtbetrag und Status (\texttt{Draft}, \texttt{Submitted}, \texttt{Approved}, \texttt{Rejected}). Die Entität \texttt{Items} enthält die zugehörigen Positionen mit Materialnummer, Menge, Einzelpreis und berechnetem Nettobetrag. Die Beziehung ist als Komposition modelliert, sodass Positionen gemeinsam mit der übergeordneten Anforderung verwaltet werden. Zusätzlich protokolliert eine \texttt{StatusHistory}-Entität alle Statusänderungen, und das Plugin \texttt{@cap-js/attachments} ermöglicht Dokumentenanhänge.
+Das Domänenmodell wird deklarativ in \gls{cds} definiert. Die zentrale Entität \texttt{PurchaseRequisitions} repräsentiert eine Bestellanforderung mit ihren Attributen:
+
+\begin{lstlisting}[language=Java, caption={Auszug aus dem CDS-Domänenmodell}, label={lst:cds-model}]
+entity PurchaseRequisitions : cuid, managed {
+  description     : String(256) @mandatory;
+  requester       : String(128) @mandatory;
+  costCenter      : String(10)  @mandatory;
+  totalAmount     : Decimal(15,2);
+  currency        : Currency;
+  status          : String(20) default 'Draft';
+  items           : Composition of many Items on items.parent = $self;
+  statusHistory   : Composition of many StatusHistory;
+  attachments     : Composition of many Attachments;
+}
+\end{lstlisting}
+
+Die Entität \texttt{Items} enthält die zugehörigen Positionen mit Materialnummer, Menge, Einzelpreis und berechnetem Nettobetrag. Die Beziehung ist als Komposition modelliert, sodass Positionen gemeinsam mit der übergeordneten Anforderung verwaltet werden. Das Statusfeld kann die Werte \texttt{Draft}, \texttt{Submitted}, \texttt{Approved} und \texttt{Rejected} annehmen. Zusätzlich protokolliert eine \texttt{StatusHistory}-Entität alle Statusänderungen mit Zeitstempel und Quelle.
 
 \subsection{Service-Schicht}
 
-Die Servicedefinition (siehe Anhang~B) exponiert das Domänenmodell als \gls{odata}-V4-Service mit drei Kernfunktionen: Die Draft-Unterstützung durch die Annotation \texttt{@odata.draft.enabled} ermöglicht das schrittweise Bearbeiten von Anforderungen. Die Submit-Aktion validiert die Anforderung und startet den Genehmigungsworkflow. Der Callback-Endpunkt empfängt die Genehmigungsentscheidung von \gls{spa}. Die Geschäftslogik in den Event-Handlern berechnet automatisch Netto- und Gesamtbeträge beim Speichern und protokolliert alle Statusänderungen in der Historie.
+Die Servicedefinition exponiert das Domänenmodell als \gls{odata}-V4-Service. Die Annotation \texttt{@odata.draft.enabled} aktiviert die Draft-Unterstützung, sodass Benutzer Anforderungen schrittweise bearbeiten können. Für die ereignisgesteuerte Workflow-Integration werden zwei zentrale Endpunkte definiert:
+
+\begin{lstlisting}[language=Java, caption={Service-Definition mit Aktionen}, label={lst:service-def}]
+service PurchaseRequisitionService {
+  @odata.draft.enabled
+  entity PurchaseRequisitions as projection on db.PurchaseRequisitions
+    actions {
+      action submit() returns PurchaseRequisitions;
+    };
+
+  // Callback-Endpunkt fuer SPA
+  action workflowCallback(
+    workflowId: String, status: String,
+    approver: String, comment: String
+  );
+}
+\end{lstlisting}
+
+Die \texttt{submit}-Aktion validiert die Anforderung und startet den Genehmigungsworkflow. Der \texttt{workflowCallback}-Endpunkt empfängt die Entscheidung von \gls{spa} und aktualisiert den Status der Bestellanforderung. Die Geschäftslogik in den Event-Handlern berechnet automatisch Netto- und Gesamtbeträge beim Speichern und protokolliert alle Statusänderungen in der Historie.
 
 \subsection{Workflow-Integration}
 
-Die Kommunikation mit \gls{spa} erfolgt über einen dedizierten \texttt{WorkflowClient}, der den OAuth2 Client Credentials Flow implementiert. Beim Freigeben einer Anforderung wird ein Genehmigungsworkflow gestartet, der folgende Kontextdaten erhält: Anforderungs-ID, Beschreibung, Anforderer, Gesamtbetrag, Positionsliste, Anhänge-URLs sowie ein Deep Link zur Fiori-Anwendung.
+Die Kommunikation mit \gls{spa} erfolgt über einen dedizierten \texttt{WorkflowClient}, der den OAuth2 Client Credentials Flow implementiert. Der Client kapselt die Authentifizierung gegenüber dem \gls{xsuaa}-Dienst und die Kommunikation mit der \gls{spa}-\gls{api}.
 
-Nach der Genehmigungsentscheidung ruft \gls{spa} den Callback-Endpunkt auf und übermittelt Status, Genehmigername und Kommentar. Die CAP-Anwendung aktualisiert daraufhin den Status der Bestellanforderung.
+Beim Freigeben einer Anforderung wird ein Genehmigungsworkflow gestartet. Der Aufruf übergibt folgende Kontextdaten an \gls{spa}: Anforderungs-ID, Beschreibung, Anforderer, Kostenstelle, Gesamtbetrag, eine strukturierte Liste der Positionen, Metadaten der Anhänge mit direkten Download-URLs sowie ein Deep Link zur Fiori-Object-Page. Die zurückgegebene Workflow-Instanz-ID wird in der Bestellanforderung persistiert, um die spätere Zuordnung des Callbacks zu ermöglichen.
+
+Nach der Genehmigungsentscheidung ruft \gls{spa} den Callback-Endpunkt auf und übermittelt die Workflow-ID, den Entscheidungsstatus, den Namen des Genehmigers sowie einen optionalen Kommentar. Die \gls{cap}-Anwendung identifiziert die zugehörige Bestellanforderung anhand der Workflow-ID und aktualisiert den Status entsprechend. Dieser bidirektionale Kommunikationsfluss realisiert das in Kapitel~2 beschriebene ereignisgesteuerte Architekturmuster.
 
 \subsection{Frontend}
 
-Die Benutzeroberfläche basiert vollständig auf SAP Fiori Elements und wird deklarativ über \gls{cds}-Annotationen konfiguriert. Der List Report zeigt alle Bestellanforderungen tabellarisch an, die Object Page ermöglicht die Detailbearbeitung mit Sektionen für Kopfdaten, Positionen, Genehmigungsinformationen, Statusverlauf und Anhänge.
+Die Benutzeroberfläche basiert vollständig auf SAP Fiori Elements und wird deklarativ über \gls{cds}-Annotationen konfiguriert. Die UI-Annotationen definieren, welche Felder in Tabellen und Formularen angezeigt werden:
 
-Eine benutzerdefinierte Schaltfläche ermöglicht die Navigation zur SPA My Inbox, wo Genehmiger ihre Aufgaben bearbeiten können.
+\begin{lstlisting}[language=Java, caption={UI-Annotationen für Fiori Elements}, label={lst:ui-annotations}]
+annotate PurchaseRequisitions with @(
+  UI: {
+    SelectionFields: [status, requester, costCenter],
+    LineItem: [
+      {Value: description}, {Value: requester},
+      {Value: totalAmount}, {Value: status}
+    ],
+    HeaderInfo: {
+      TypeName: 'Bestellanforderung',
+      Title: {Value: description}
+    }
+  }
+);
+\end{lstlisting}
+
+Der List Report zeigt alle Bestellanforderungen tabellarisch mit Filtermöglichkeiten an (siehe Abbildung~\ref{fig:listreport}). Die Object Page ermöglicht die Detailbearbeitung mit Sektionen für Kopfdaten, Positionen, Genehmigungsinformationen, Statusverlauf und Anhänge (siehe Abbildung~\ref{fig:objectpage}).
+
+\begin{figure}[H]
+  \centering
+  \fbox{\parbox{0.9\textwidth}{\centering\vspace{2.5cm}\textbf{PLATZHALTER: Screenshot List Report}\\\textit{(listreport.png)}\vspace{2.5cm}}}
+  \caption{List Report mit Übersicht der Bestellanforderungen}
+  \label{fig:listreport}
+\end{figure}
+
+\begin{figure}[H]
+  \centering
+  \fbox{\parbox{0.9\textwidth}{\centering\vspace{2.5cm}\textbf{PLATZHALTER: Screenshot Object Page}\\\textit{(objectpage.png)}\vspace{2.5cm}}}
+  \caption{Object Page zur Bearbeitung einer Bestellanforderung}
+  \label{fig:objectpage}
+\end{figure}
+
+Eine benutzerdefinierte Schaltfläche ermöglicht die Navigation zur \gls{spa} My Inbox, wo Genehmiger ihre Aufgaben bearbeiten können.
 
 \subsection{Deployment}
 
-Die Bereitstellung erfolgt als \gls{mta} auf Cloud Foundry (siehe Anhang~D). Das Deployment umfasst drei Module: Der CAP-Server ist eine Node.js-Anwendung mit \gls{odata}-Service und Geschäftslogik. Der HDI-Deployer überführt das CDS-Modell in das HANA-Datenbankschema. Der Application Router liefert die Fiori-Oberfläche aus und koordiniert die Authentifizierung. Die \gls{spa}-Konfiguration erfolgt über Umgebungsvariablen, was die Trennung von Code und Konfiguration nach dem Twelve-Factor-App-Prinzip gewährleistet \citep{wiggins2017twelvefactor}.
+Die Bereitstellung erfolgt als \gls{mta} auf Cloud Foundry. Der \gls{mta}-Deskriptor definiert drei Module: Der CAP-Server ist eine Node.js-Anwendung mit \gls{odata}-Service und Geschäftslogik. Der HDI-Deployer überführt das \gls{cds}-Modell in das HANA-Datenbankschema. Der Application Router liefert die Fiori-Oberfläche aus und koordiniert die Authentifizierung über \gls{xsuaa}.
+
+Die \gls{spa}-Konfiguration -- Workflow-Definition-ID, \gls{api}-Endpunkt und Authentifizierungsparameter -- erfolgt über Umgebungsvariablen und BTP-Destinations. Diese Trennung von Code und Konfiguration entspricht dem Twelve-Factor-App-Prinzip und ermöglicht den Betrieb in verschiedenen Umgebungen ohne Code-Änderungen \citep{wiggins2017twelvefactor}.
