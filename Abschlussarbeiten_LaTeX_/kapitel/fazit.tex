@@ -7,8 +7,24 @@ Gegenstand dieser Arbeit war die Konzeption, Implementierung und Evaluation eine
 
 Die vier Teilziele wurden vollständig adressiert: Die Anforderungsanalyse identifizierte elf funktionale Anforderungen an die ereignisgesteuerte Workflow-Integration (Teilziel~1). Der Architekturentwurf basiert auf einer Drei-Schichten-Architektur mit klarer Trennung von Datenmodell, Geschäftslogik und Benutzeroberfläche (Teilziel~2). Die prototypische Implementierung realisiert die bidirektionale Anbindung zwischen \gls{cap} und \gls{spa}, wobei Geschäftsereignisse automatisch Workflows auslösen und deren Ergebnisse über Callbacks zurückgemeldet werden (Teilziel~3). Die Evaluation bestätigte die vollständige Umsetzung aller Anforderungen (Teilziel~4).
 
-Der annotationsgetriebene Ansatz des \gls{cap} in Kombination mit Fiori Elements ermöglicht eine effiziente Oberflächenentwicklung ohne manuellen UI-Code. \gls{spa} hat sich als geeignetes Werkzeug für die Low-Code-Modellierung von Genehmigungsworkflows erwiesen \citep{sap2024capguide, newman2021microservices}.
+\subsection{Kritische Reflexion}
+
+Die Umsetzung der ereignisgesteuerten Architektur hat sowohl Stärken als auch Herausforderungen offenbart. Als besonders vorteilhaft erwies sich der deklarative Entwicklungsansatz des \gls{cap}. Durch die Modellierung in \gls{cds} konnten Datenmodell, Service-Schnittstellen und Benutzeroberfläche aus einer einzigen Quelle generiert werden. Dies reduzierte den Implementierungsaufwand erheblich und minimierte Inkonsistenzen zwischen den Schichten. Der annotationsgetriebene Ansatz in Kombination mit Fiori Elements ermöglichte eine vollständige Oberflächenentwicklung ohne manuellen UI-Code \citep{sap2024capguide}.
+
+Die lose Kopplung zwischen \gls{cap}-Anwendung und \gls{spa} über API-Trigger und Callback-Endpunkte entspricht dem Prinzip der ereignisgesteuerten Architektur und ermöglicht eine unabhängige Weiterentwicklung beider Komponenten. \gls{spa} hat sich als geeignetes Werkzeug für die Low-Code-Modellierung von Genehmigungsworkflows erwiesen, da Prozessänderungen ohne Programmierung möglich sind \citep{newman2021microservices}.
+
+Gleichzeitig traten während der Implementierung technische Herausforderungen auf. Die Feldnamen-Konvertierung zwischen \gls{cap} und \gls{spa} erforderte besondere Aufmerksamkeit, da beide Systeme unterschiedliche Namenskonventionen verwenden. Die regionenübergreifende Destination-Konfiguration stellte eine weitere Hürde dar, insbesondere wenn \gls{spa} und die \gls{cap}-Anwendung in unterschiedlichen BTP-Regionen betrieben werden. Zudem erforderte die Betragsberechnung im Zusammenspiel mit dem Draft-Mechanismus eine sorgfältige Implementierung der Event-Handler, um Dateninkonsistenzen zu vermeiden.
+
+Ein weiterer Kritikpunkt betrifft die Testbarkeit der Lösung. Da der Genehmigungsworkflow in \gls{spa} als externe Abhängigkeit fungiert, gestaltet sich das automatisierte Testen der End-to-End-Prozesse schwierig. Für einen produktiven Einsatz wäre die Implementierung von Mock-Services und Integrationstests erforderlich.
 
 \subsection{Ausblick}
 
-Für eine produktive Nutzung bieten sich folgende Erweiterungen an: Integration mit SAP S/4HANA zur automatischen Bestellerzeugung nach Genehmigung, Einführung eines rollenbasierten Berechtigungskonzepts über \gls{xsuaa}, mehrstufige Genehmigungsprozesse in Abhängigkeit vom Bestellwert sowie E-Mail-Benachrichtigungen bei ausstehenden Aufgaben. Darüber hinaus sollten automatisierte Tests implementiert und die Anwendung in SAP Build Work Zone integriert werden \citep{sap2024btpguide, kratzke2021cloud}.
+Die prototypische Implementierung bildet eine solide Grundlage für weiterführende Entwicklungen. Für einen produktiven Einsatz bieten sich mehrere Erweiterungen an.
+
+Im Bereich der Prozesslogik wäre die Einführung mehrstufiger Genehmigungsprozesse sinnvoll, bei denen die Anzahl der erforderlichen Genehmigungen vom Bestellwert oder der Kostenstelle abhängt. Darüber hinaus könnte eine Integration mit SAP S/4HANA realisiert werden, um nach erfolgter Genehmigung automatisch eine Bestellung im ERP-System anzulegen.
+
+Hinsichtlich der Benutzererfahrung würde die Integration von E-Mail-Benachrichtigungen bei ausstehenden Genehmigungsaufgaben die Prozessdurchlaufzeiten verkürzen. Die Einbindung der Anwendung in SAP Build Work Zone würde zudem ein einheitliches Einstiegsportal für alle Geschäftsanwendungen schaffen \citep{sap2024btpguide}.
+
+Aus technischer Sicht sollten automatisierte Unit- und Integrationstests implementiert werden, um die Qualitätssicherung zu verbessern. Eine Mandantenfähigkeit würde den Einsatz in Multi-Tenant-Szenarien ermöglichen. Schließlich könnte die Anwendung um ein Dashboard zur Prozessanalyse erweitert werden, das Kennzahlen wie durchschnittliche Genehmigungsdauer oder Ablehnungsquoten visualisiert \citep{kratzke2021cloud}.
+
+Die in dieser Arbeit entwickelte Architektur ist nicht auf den Anwendungsfall der Bestellanforderung beschränkt. Das Muster der ereignisgesteuerten Workflow-Integration lässt sich auf weitere Geschäftsprozesse übertragen, beispielsweise Urlaubsanträge, Reisekostenabrechnungen oder Änderungsanträge im Produktdatenmanagement.
