@@ -6,7 +6,7 @@ Dieses Kapitel erläutert die technologischen Grundlagen der Lösung: die \gls{b
 \subsection{SAP Business Technology Platform}
 \label{subsec:btp}
 
-Die \gls{btp} ist die zentrale Cloud-Plattform der SAP SE für die Entwicklung, Integration und Erweiterung betriebswirtschaftlicher Anwendungen \citep{metzger2021sap}. Sie vereint Datenbank- und Datenmanagement, Analytik, Anwendungsentwicklung, Integration sowie Künstliche Intelligenz unter einem gemeinsamen Dach \citep{sap2024btp}.
+Die \gls{btp} ist die zentrale Cloud-Plattform der SAP SE für die Entwicklung, Integration und Erweiterung betriebswirtschaftlicher Anwendungen \citep{sap2024btpguide}. Sie vereint Datenbank- und Datenmanagement, Analytik, Anwendungsentwicklung, Integration sowie Künstliche Intelligenz unter einem gemeinsamen Dach \citep{sap2024btp}.
 
 Die Plattform verfolgt einen Multi-Cloud-Ansatz und kann auf den Infrastrukturen von AWS, Microsoft Azure und Google Cloud betrieben werden. Als Laufzeitumgebung kommt in dieser Arbeit \gls{cf} zum Einsatz, eine quelloffene \gls{paas}-Technologie, die Skalierung, Netzwerk und Betriebssystemverwaltung abstrahiert \citep{leymann2011cloud}. Die Administration erfolgt über das SAP BTP Cockpit, in dem Subaccounts, Umgebungen und Service-Instanzen konfiguriert werden.
 
@@ -15,14 +15,14 @@ Die Plattform verfolgt einen Multi-Cloud-Ansatz und kann auf den Infrastrukturen
 
 Das \gls{cap} ist ein quelloffenes Framework für die Entwicklung von Unternehmensanwendungen auf der \gls{btp}. Es verfolgt einen deklarativen Ansatz, bei dem Domänenmodelle und Servicedefinitionen im Mittelpunkt stehen \citep{sap2024cap}.
 
-Das zentrale Beschreibungsmittel sind die Core Data Services (\gls{cds}). Mit \gls{cds} werden Datenmodelle und Serviceschnittstellen in einer kompakten, domänenspezifischen Sprache definiert \citep{herger2023cap}. Das Framework generiert daraus automatisch Datenbankartefakte, \gls{odata}-V4-Schnittstellen sowie die Laufzeitinfrastruktur. Eingebaute Funktionalitäten umfassen automatische \gls{odata}-Bereitstellung, Integration mit dem \gls{xsuaa}-Dienst zur Authentifizierung sowie Draft-Handling für die Zwischenspeicherung von Nutzereingaben.
+Das zentrale Beschreibungsmittel sind die Core Data Services (\gls{cds}). Mit \gls{cds} werden Datenmodelle und Serviceschnittstellen in einer kompakten, domänenspezifischen Sprache definiert \citep{sap2024capguide}. Das Framework generiert daraus automatisch Datenbankartefakte, \gls{odata}-V4-Schnittstellen sowie die Laufzeitinfrastruktur. Eingebaute Funktionalitäten umfassen automatische \gls{odata}-Bereitstellung, Integration mit dem \gls{xsuaa}-Dienst zur Authentifizierung sowie Draft-Handling für die Zwischenspeicherung von Nutzereingaben.
 
 \subsection{SAP Fiori und Fiori Elements}
 \label{subsec:fiori}
 
 SAP Fiori bezeichnet die Designrichtlinien der SAP für moderne Benutzeroberflächen. Die Fiori-Prinzipien definieren, dass Anwendungen rollenbasiert, adaptiv, kohärent, einfach und ansprechend sein sollen \citep{sap2024fiori}.
 
-Fiori Elements ist ein darauf aufbauendes UI-Framework, das Benutzeroberflächen aus \gls{odata}-Metadaten und UI-Annotationen generiert. Statt individueller Frontend-Entwicklung werden UI-Eigenschaften -- Tabellenspalten, Filterfelder, Formularabschnitte -- deklarativ über Annotationen definiert \citep{sap2024fiorielem}. Technisch basiert Fiori Elements auf \gls{ui5}, dem SAP-eigenen JavaScript-Framework \citep{bince2019fiori}.
+Fiori Elements ist ein darauf aufbauendes UI-Framework, das Benutzeroberflächen aus \gls{odata}-Metadaten und UI-Annotationen generiert. Statt individueller Frontend-Entwicklung werden UI-Eigenschaften -- Tabellenspalten, Filterfelder, Formularabschnitte -- deklarativ über Annotationen definiert \citep{sap2024fiorielem}. Technisch basiert Fiori Elements auf \gls{ui5}, dem SAP-eigenen JavaScript-Framework \citep{bavaraju2017fiori}.
 
 \subsection{SAP Build Process Automation}
 \label{subsec:sbpa}
