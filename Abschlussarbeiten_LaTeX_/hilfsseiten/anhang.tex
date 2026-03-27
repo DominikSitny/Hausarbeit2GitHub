@@ -90,6 +90,116 @@ service PurchaseService @(path: '/purchase') {
 }
 \end{lstlisting}
 
+\subsection*{E\quad Submit-Aktion mit Workflow-Start (purchase-service.js -- Auszug)}
+\begin{lstlisting}[caption={Submit-Aktion: Validierung, Statuswechsel und Workflow-Start},label={lst:anhang-submit}]
+this.on('submit', PurchaseRequisitions, async req => {
+  const id = req.params[0]?.ID || req.params[0];
+
+  const pr = await SELECT.one.from(PurchaseRequisitions)
+    .where({ ID: id })
+    .columns(pr => { pr('*'); pr.items(i => i('*')); pr.attachments(a => a('*')); });
+
+  if (!pr) return req.error(404, `Bestellanforderung ${id} nicht gefunden`);
+  if (pr.status === 'Submitted')
+    return req.error(409, 'Bereits eingereicht');
+  if (!pr.items || pr.items.length === 0)
+    return req.error(422, 'Mindestens eine Position erforderlich');
+  if (pr.totalAmount <= 0)
+    return req.error(422, 'Gesamtbetrag muss groesser als 0 sein');
+
+  await UPDATE(PurchaseRequisitions).set({ status: 'Submitted' }).where({ ID: id });
+
+  try {
+    const workflowInstanceId = await workflowClient.startApprovalWorkflow(pr);
+    await UPDATE(PurchaseRequisitions)
+      .set({ workflowId: workflowInstanceId }).where({ ID: id });
+  } catch (err) {
+    await UPDATE(PurchaseRequisitions).set({ status: 'Draft' }).where({ ID: id });
+    return req.error(502, `Workflow konnte nicht gestartet werden: ${err.message}`);
+  }
+});
+
+this.on('workflowCallback', async req => {
+  const { workflowId, status, comment, approverName, decidedAt } = req.data;
+
+  if (!workflowId) return req.error(400, 'workflowId ist erforderlich');
+  if (!['APPROVED', 'REJECTED'].includes(status))
+    return req.error(400, `Ungueltiger Status "${status}"`);
+
+  const pr = await SELECT.one.from(PurchaseRequisitions).where({ workflowId });
+  if (!pr) return req.error(404, `Kein Datensatz fuer Workflow ${workflowId}`);
+  if (pr.status !== 'Submitted') return req.error(409, 'Datensatz nicht im Status Submitted');
+
+  const callbackStatus = status === 'APPROVED' ? 'Approved' : 'Rejected';
+  await UPDATE(PurchaseRequisitions).set({
+    status: callbackStatus,
+    approverComment: comment || null,
+    approvedBy: approverName || null,
+    decidedAt: new Date(decidedAt || Date.now()).toISOString(),
+    ...(callbackStatus === 'Rejected' ? { workflowId: null } : {})
+  }).where({ ID: pr.ID });
+});
+\end{lstlisting}
+
+\subsection*{F\quad WorkflowClient (workflow-client.js -- Auszug)}
+\begin{lstlisting}[caption={WorkflowClient: OAuth2-Authentifizierung und Workflow-Start via SPA-API},label={lst:anhang-workflowclient}]
+class WorkflowClient {
+
+  async _getToken() {
+    const response = await fetch(process.env.SPA_TOKEN_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+        'Authorization': 'Basic ' + Buffer.from(
+          `${process.env.SPA_CLIENT_ID}:${process.env.SPA_CLIENT_SECRET}`
+        ).toString('base64')
+      },
+      body: 'grant_type=client_credentials'
+    });
+    const data = await response.json();
+    return data.access_token;
+  }
+
+  async startApprovalWorkflow(requisition) {
+    const token = await this._getToken();
+    const workflowContext = {
+      requisitionId: requisition.ID,
+      description:   requisition.description,
+      requester:     requisition.requester,
+      costCenter:    requisition.costCenter,
+      totalAmount:   parseFloat(requisition.totalAmount),
+      currency:      requisition.currency_code || 'EUR',
+      items: requisition.items.map(item => ({
+        materialNo:  item.materialNo,
+        description: item.description,
+        quantity:    String(item.quantity),
+        unitPrice:   String(item.unitPrice),
+        netAmount:   String(item.netAmount)
+      })),
+      detailLink: `${process.env.APP_URL}#/PurchaseRequisitions(ID=${requisition.ID},IsActiveEntity=true)`,
+      callbackUrl: process.env.CAP_CALLBACK_URL
+    };
+
+    const result = await fetch(
+      `${process.env.SPA_API_URL}/workflow/rest/v1/workflow-instances`,
+      {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          definitionId: process.env.SPA_WORKFLOW_DEFINITION_ID,
+          context: workflowContext
+        })
+      }
+    );
+    const data = await result.json();
+    return data.id;
+  }
+}
+\end{lstlisting}
+
 \subsection*{D\quad MTA-Deskriptor (mta.yaml -- Auszug)}
 \begin{lstlisting}[caption={MTA-Deskriptor mit Modulen und Ressourcen},label={lst:anhang-mta}]
 ID: purchase-approval

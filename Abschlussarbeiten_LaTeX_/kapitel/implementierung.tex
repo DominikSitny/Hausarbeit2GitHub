@@ -46,11 +46,11 @@ service PurchaseRequisitionService {
 }
 \end{lstlisting}
 
-Die \texttt{submit}-Aktion validiert die Anforderung und startet den Genehmigungsworkflow. Der \texttt{workflowCallback}-Endpunkt empfängt die Entscheidung von \gls{spa} und aktualisiert den Status der Bestellanforderung. Die Geschäftslogik in den Event-Handlern berechnet automatisch Netto- und Gesamtbeträge beim Speichern und protokolliert alle Statusänderungen in der Historie.
+Die \texttt{submit}-Aktion validiert die Anforderung und startet den Genehmigungsworkflow (siehe Anhang~E). Der \texttt{workflowCallback}-Endpunkt empfängt die Entscheidung von \gls{spa} und aktualisiert den Status der Bestellanforderung. Die Geschäftslogik in den Event-Handlern berechnet automatisch Netto- und Gesamtbeträge beim Speichern und protokolliert alle Statusänderungen in der Historie.
 
 \subsection{Workflow-Integration}
 
-Die Kommunikation mit \gls{spa} erfolgt über einen dedizierten \texttt{WorkflowClient}, der den OAuth2 Client Credentials Flow implementiert. Der Client kapselt die Authentifizierung gegenüber dem \gls{xsuaa}-Dienst und die Kommunikation mit der \gls{spa}-\gls{api}.
+Die Kommunikation mit \gls{spa} erfolgt über einen dedizierten \texttt{WorkflowClient}, der den OAuth2 Client Credentials Flow implementiert (siehe Anhang~F). Der Client kapselt die Authentifizierung gegenüber dem \gls{xsuaa}-Dienst und die Kommunikation mit der \gls{spa}-\gls{api}.
 
 Beim Freigeben einer Anforderung wird ein Genehmigungsworkflow gestartet. Der Aufruf übergibt folgende Kontextdaten an \gls{spa}: Anforderungs-ID, Beschreibung, Anforderer, Kostenstelle, Gesamtbetrag, eine strukturierte Liste der Positionen, Metadaten der Anhänge mit direkten Download-URLs sowie ein Deep Link zur Fiori-Object-Page. Die zurückgegebene Workflow-Instanz-ID wird in der Bestellanforderung persistiert, um die spätere Zuordnung des Callbacks zu ermöglichen.
 
